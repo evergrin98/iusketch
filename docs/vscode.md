@@ -1,5 +1,6 @@
 VScode 설치
 ===========
-<img src="/path/to/img.jpg" width="40%" height="30%" title="px(픽셀) 크기 설정" alt="![1](https://user-images.githubusercontent.com/112140363/209622170-a2815687-52d8-45ff-9f47-00317a2bdcb5.png)"></img>
+
+![2](https://user-images.githubusercontent.com/112140363/209625787-a5d4bb83-9dcb-4006-a384-5098430c1520.png)
 
 
