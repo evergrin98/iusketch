@@ -8,7 +8,7 @@ import imageio
 from PIL import Image, ImageTk, ImageGrab
 
 from utils.guis import BaseGuiClass
-from utils.processes import Worker
+# from utils.processes import Worker
 from classes.sketch_canvas import SketchCanvas
 
 
