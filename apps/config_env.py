@@ -6,4 +6,5 @@
 
 IMG_LOAD_BASE_PATH = '/home/evergrin/python/datas/imgs/load/lion/good/'
 IMG_SAVE_BASE_PATH = '/home/evergrin/python/datas/imgs/save/'
+TEMP_EPS_PATH = '/home/evergrin/python/datas/imgs/save/_temp.eps'
 

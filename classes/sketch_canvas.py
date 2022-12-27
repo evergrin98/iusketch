@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 
+import config_env as cfg
+
 import pyautogui as pg
 import imageio
 from PIL import Image, ImageTk, ImageGrab
@@ -76,8 +78,7 @@ class SketchCanvas():
         self.crop_box.hide()
         self.imager.hide()
             
-        save_base_path = '/home/evergrin/python/datas/imgs/save/'
-        temp_file = os.path.join(save_base_path, "temp.eps")
+        temp_file = cfg.TEMP_EPS_PATH
         self.canvas.postscript(file=temp_file, colormode = 'color')
         img = Image.open(temp_file).resize((self.canvas.winfo_width(), self.canvas.winfo_height()))
 
