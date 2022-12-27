@@ -1,4 +1,5 @@
 import time, os
+import glob
 
 import config_env as cfg
 
@@ -33,6 +34,11 @@ class FrameMaker(BaseGuiClass):
         self.save_base_path = cfg.IMG_SAVE_BASE_PATH
         self.load_img_dir = self.load_base_path
         self.save_img_dir = self.save_base_path
+        self.file_path = ""
+
+        # for batch crop all
+        self.batch_img_list = []
+        self.next_batch_idx = -1
 
         p = self._last_pos.copy()
         self.load_label = self.add_label("load path", **p)
@@ -56,6 +62,9 @@ class FrameMaker(BaseGuiClass):
         self.img_label = self.add_label("None", **xy, w=30)
         xy = self.side_xy(offset=1)
         self.load_img_btn = self.add_button("select", command=self.load_img_btn_handler, **xy, w=10)
+        xy = self.side_xy(offset=1)
+        self.batch_crop_btn = self.add_button("Crop All", command=self.batch_crop_btn_handler, **xy, w=10)
+
 
         # canvas 512*512 추가.
         self.canvas_wgt = self.add_canvas(x=2, y=6, w=64, h=32)
@@ -197,8 +206,38 @@ class FrameMaker(BaseGuiClass):
 
     def load_img_btn_handler(self):
         ''' 로드할 이미지 파일 선택.'''
-        self.file_path = filedialog.askopenfilename(initialdir=self.load_img_dir)
-        self.load_img_file(self.file_path)
+
+        file_path = ""
+        ''' 배치 crop중인가? '''
+        if self.next_batch_idx != -1:
+
+            ''' 모든 이미지를 배치 처리했는가?  '''
+            if self.next_batch_idx < len(self.batch_img_list):
+                file_path = self.batch_img_list[self.next_batch_idx]
+                print(f"batch load {self.next_batch_idx} / {len(self.batch_img_list)}")
+                self.next_batch_idx += 1
+            else:
+                print("all batch end")
+                self.next_batch_idx = -1
+                return
+        else:
+            file_path = filedialog.askopenfilename(initialdir=self.load_img_dir)
+
+        self.load_img_file(file_path)
+
+
+    def batch_crop_btn_handler(self):
+        '''
+        load에 있는 모든 파일에 대하여 crop을 배치 진행함.
+        self.next_batch_idx가 -1이 아니면 crop완료시 next버튼으로 이어서 진행.
+        '''
+        self.batch_img_list = glob.glob(os.path.join(self.load_img_dir, '*.png'))
+        self.batch_img_list.sort()
+
+        if len(self.batch_img_list) > 0:
+            self.next_batch_idx = 0
+            print(f"batch crop start: {len(self.batch_img_list)} images")
+            self.load_img_btn_handler()
 
 
     def load_img_file(self, file_path):
@@ -206,6 +245,7 @@ class FrameMaker(BaseGuiClass):
         self.canvas.load_img(file_path, ratio=2.0)
         file_name = os.path.basename(file_path)
         self.img_label.config(text=file_name)
+        self.file_path = file_path
 
 
 

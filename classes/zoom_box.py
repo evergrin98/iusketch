@@ -7,8 +7,8 @@ class ZoomBox():
     '''
     def __init__(self, w = 300, h = 300, max_x=500, max_y=500):
         '''ZoomBox 초기화.'''
-        self.x_step = self.y_step = 10    # x/x축 이동 step크기
-        self.min_x = self.min_y = 100    # ZoomBox최소 width/height
+        self.x_step = self.y_step = 5    # x/x축 이동 step크기
+        self.min_x = self.min_y = 64    # ZoomBox최소 width/height
         self.width = w      # ZoomBox width
         self.height = h     # ZoomBox height
         self.set_size(max_x, max_y)
