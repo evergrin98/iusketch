@@ -18,7 +18,7 @@ from classes.sketch_canvas import SketchCanvas
 
 class FrameMaker(BaseGuiClass):
     '''
-    이미지를 표시하는 다이얼로그 생성 클래스.
+    FrameMaker 다이얼로그 생성 클래스.
     '''
 
     def __init__(self):
@@ -120,20 +120,27 @@ class FrameMaker(BaseGuiClass):
         elif event.keycode == 116: # down-arrow key
             self.canvas.crop_box.down()
         elif event.char == 'c':
+            ''' crop image & save to png '''
             file_name = dir_path_change(self.file_path, self.save_img_dir, 'png')
-            img = self.canvas.to_image(True)
+            img = self.canvas.to_image(crop=True)
+            img = img.resize(cfg.RAW_IMG_SIZE)
             img = img.save(file_name)
+            print(file_name + " saved")
             return
         elif event.char == 'a':
+            ''' crop image & add to img_clips '''
             self.canvas.add_image_frame(crop=True)
             return
         elif event.char == 'f':
+            ''' img_clips to gif file '''
             self.save_to_gif()
             return
         elif event.char == 'l':
+            ''' open image '''
             self.load_img_btn_handler()
             return
         elif event.char == 'r':
+            ''' reset changes '''
             self.canvas.reset()
             self.load_img_file(self.file_path)
             return
@@ -141,6 +148,7 @@ class FrameMaker(BaseGuiClass):
             img = self.canvas.add_image_frame(crop=True)
             return
         elif event.char == 'v':
+            ''' img_clips to gifs '''
             file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
             self.canvas.to_video_clip(file_name, crop=True, reverse=False)
             return

@@ -60,7 +60,32 @@ class SketchCanvas():
 
 
     def to_image(self, crop=False):
-        return self.to_image_frame(crop=crop).to_image()
+        '''
+        canvas이미지만 crop하여 image로 변환.
+        eps파일을 메모리에 생성할 수 없어서 임시 파일로 생성후 open함.
+
+        postscrip시 dpi에 따라 크기가 변하므로,
+        1. 이미지를 포함하여 전체 canvas를 영역을 postscript실시하고,
+        2. canvas크기로 resize
+        3. 이미지 영역만 crop함.
+        4. image 리턴.
+        '''
+
+        self.crop_box.hide()
+        self.imager.show()
+
+        temp_file = cfg.TEMP_EPS_PATH
+        self.canvas.postscript(file=temp_file, colormode = 'color')
+        img = Image.open(temp_file).resize((self.canvas.winfo_width(), self.canvas.winfo_height()))
+
+        if crop:
+            img = img.crop((self.crop_box.rect()))
+        else:
+            img = img.crop((0, 0, *self.imager.image_wh()))
+
+        self.crop_box.show()
+
+        return img
 
 
     def to_image_frame(self, crop=False):

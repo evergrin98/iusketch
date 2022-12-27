@@ -10,7 +10,7 @@ from classes.sketch_canvas import SketchCanvas
 
 class SketcherDialog(BaseGuiClass):
     '''
-    이미지를 표시하는 다이얼로그 생성 클래스.
+    SketcherAI 다이얼로그 생성 클래스.
     '''
 
     def __init__(self):
@@ -51,7 +51,6 @@ class SketcherDialog(BaseGuiClass):
 
         # event bind
         self.bind("<Key>", self.keyboard_handler)
-
 
 
 

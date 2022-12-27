@@ -3,8 +3,10 @@
     환경 및 설정 파일.
 '''
 
+RAW_IMG_W = 256
+RAW_IMG_H = 256
+RAW_IMG_SIZE = RAW_IMG_W, RAW_IMG_H
 
-IMG_LOAD_BASE_PATH = '/home/evergrin/python/datas/imgs/load/lion/good/'
-IMG_SAVE_BASE_PATH = '/home/evergrin/python/datas/imgs/save/'
-TEMP_EPS_PATH = '/home/evergrin/python/datas/imgs/save/_temp.eps'
-
+IMG_LOAD_BASE_PATH = '/home/evergrin/iu/datas/imgs/raw_imgs/now_crop/'
+IMG_SAVE_BASE_PATH = '/home/evergrin/iu/datas/imgs/raw_imgs/cropped/'
+TEMP_EPS_PATH = '/home/evergrin/iu/datas/imgs/_temp.eps'
