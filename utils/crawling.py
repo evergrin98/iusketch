@@ -104,13 +104,13 @@ if __name__ == "__main__":
     """
     import os
     #https://www.google.com/search?q=child+drawing+lion+images+no+color&client=ubuntu&hs=RT5&sxsrf=ALiCzsbkTl2FEX-dIYkkld-XjU9tHsdy_A:1668698620494&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjVwovkwrX7AhV7mlYBHfmMApIQ_AUoAXoECAIQAw&biw=1490&bih=758&dpr=1.25
-    img_url = 'https://www.google.com/search?q=child+drawing+lion+images+no+color&oq=child+drawing+lion+images+no+color&aqs=chrome..69i57j33i160l2.13843j0j15&client=ubuntu&sourceid=chrome&ie=UTF-8'
+    # img_url = 'https://www.google.com/search?q=child+drawing+lion+images+no+color&oq=child+drawing+lion+images+no+color&aqs=chrome..69i57j33i160l2.13843j0j15&client=ubuntu&sourceid=chrome&ie=UTF-8'
 
     # response = request_get(img_url)
     # data = response.content.decode()
     
-    base_path = '/home/evergrin/python/datas/imgs/'
-    res_file = os.path.join(base_path, "res.txt")
+    base_path = './datas/'
+    res_file = os.path.join(base_path, "crawl.txt")
     with open(res_file, "r") as f:
         data = f.read()
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             # img_srcs.append(anchor.get("src")+"\n")
 
     print("검색결과 이미지:", len(img_srcs))
-    for i, img_src in enumerate(img_srcs[300:]):
-        to_file = os.path.join(base_path, 'img2%03d.png'%(i))
+    for i, img_src in enumerate(img_srcs):
+        to_file = os.path.join(base_path, 'img%04d.png'%(i))
         file_download(img_src, to_file)
-        
+
