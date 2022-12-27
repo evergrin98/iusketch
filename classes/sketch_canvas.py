@@ -8,6 +8,7 @@ from PIL import Image, ImageTk, ImageGrab
 import math, os
 import numpy as np
 
+from utils.files import not_duplicated_path
 from classes.canvas_zoombox import CanvasZoomBox
 from classes.image_frame import ImgFrame
 from classes.video_clip import VideoClip
@@ -54,6 +55,10 @@ class SketchCanvas():
         img_clips에 현재 보이는 이미지를 추가함.
         '''
         self.img_clips.make_gif(save_path, reverse=reverse)
+
+
+    def to_image(self, crop=False):
+        return self.to_image_frame(crop=crop).to_image()
 
 
     def to_image_frame(self, crop=False):
@@ -124,16 +129,7 @@ class SketchCanvas():
         frm = self.to_image_frame(crop=True)
         clips.append(frm)
 
-        new_path = save_path
-        idx = 0
-        while os.path.exists(new_path):
-            new_path = save_path.replace(".gif", f"_{idx:03d}.gif")
-
-            if os.path.exists(new_path):
-                idx = idx + 1
-                continue
-            else:
-                break
+        new_path = not_duplicated_path(save_path)
         clips.make_gif(new_path, reverse=reverse)
 
 

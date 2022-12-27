@@ -1,5 +1,7 @@
 import time, os
 
+import config_env as cfg
+
 import tkinter as tk
 from tkinter import filedialog
 
@@ -8,9 +10,9 @@ import imageio
 from PIL import Image, ImageTk, ImageGrab
 
 from utils.guis import BaseGuiClass
-# from utils.processes import Worker
-from classes.sketch_canvas import SketchCanvas
+from utils.files import dir_path_change
 
+from classes.sketch_canvas import SketchCanvas
 
 
 
@@ -27,8 +29,8 @@ class FrameMaker(BaseGuiClass):
         self.geometry('550x700')
         self.resizable(0, 0)
 
-        self.load_base_path = '/home/evergrin/python/datas/imgs/load/lion/good/'
-        self.save_base_path = '/home/evergrin/python/datas/imgs/save/'
+        self.load_base_path = cfg.IMG_LOAD_BASE_PATH
+        self.save_base_path = cfg.IMG_SAVE_BASE_PATH
         self.load_img_dir = self.load_base_path
         self.save_img_dir = self.save_base_path
 
@@ -118,7 +120,9 @@ class FrameMaker(BaseGuiClass):
         elif event.keycode == 116: # down-arrow key
             self.canvas.crop_box.down()
         elif event.char == 'c':
-            print("crop")
+            file_name = dir_path_change(self.file_path, self.save_img_dir, 'png')
+            img = self.canvas.to_image(True)
+            img = img.save(file_name)
             return
         elif event.char == 'a':
             self.canvas.add_image_frame(crop=True)
@@ -137,11 +141,8 @@ class FrameMaker(BaseGuiClass):
             img = self.canvas.add_image_frame(crop=True)
             return
         elif event.char == 'v':
-            file_full_name = os.path.basename(self.file_path)
-            file_name = os.path.splitext(file_full_name)[0]
-            file_name = file_name + ".gif"
-            gif_file = os.path.join(self.save_img_dir, file_name)
-            img = self.canvas.to_video_clip(gif_file, crop=True, reverse=False)
+            file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
+            self.canvas.to_video_clip(file_name, crop=True, reverse=False)
             return
         elif event.char == 'b':
             self.canvas.undo()
