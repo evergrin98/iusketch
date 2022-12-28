@@ -22,6 +22,13 @@ class CanvasImage():
         self.ratio = ratio        
         w, h = self.image.size
 
+        if ratio != 1.0:
+            img_size = (int(w*ratio), int(h*ratio))
+            self.image = self.image.resize(img_size, Image.LANCZOS)
+
+        w, h = self.image.size
+
+        # image boundary check.
         nw = w
         nh = h
         if max_w != 0 and max_h != 0:
@@ -41,25 +48,24 @@ class CanvasImage():
 
             img_size = (nw, nh)
             self.image = self.image.resize(img_size, Image.LANCZOS)
-        else:
-            if ratio != 1.0:
-                img_size = (int(w*ratio), int(h*ratio))
-                self.image = self.image.resize(img_size, Image.LANCZOS)
+        # else:
+        #     if ratio != 1.0:
+        #         img_size = (int(w*ratio), int(h*ratio))
+        #         self.image = self.image.resize(img_size, Image.LANCZOS)
 
         if self.blurry:
             self.image = self.image.point( lambda p: 255 if p > 200 else 100 )
 
         w, h = self.image.size
         self.photo = ImageTk.PhotoImage(self.image)
+        ix = int((max_w - w) / 2)
+        iy = int((max_h - h) / 2)
 
-        if self.container is None:
-            # 처음이면 img_container생성
-            ix = int((max_w - w) / 2)
-            iy = int((max_h - h) / 2)
-            self.container = self.canvas.create_image(ix, iy, anchor=tk.NW, image=self.photo)
-        else:
-            # img_container가 있으면 update
-            self.canvas.itemconfig(self.container, image=self.photo)
+        if self.container is not None:
+            # img_container가 있으면 다시 생성.
+            del self.container
+
+        self.container = self.canvas.create_image(ix, iy, anchor=tk.NW, image=self.photo)
 
 
     def image_wh(self):

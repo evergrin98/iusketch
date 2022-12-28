@@ -24,6 +24,7 @@ class CanvasZoomBox(ZoomBox):
 
     def update_size(self, w, h):
         self.set_size(w, h) # set_size를 직접호출하면 안됨.
+        self.set_wh(w, h)
         self.update()
 
 

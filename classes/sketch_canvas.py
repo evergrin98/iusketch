@@ -181,8 +181,9 @@ class SketchCanvas():
         return self.canvas.winfo_reqwidth(), self.canvas.winfo_reqheight()
 
 
-    def load_img(self, file_path, ratio=2.,):
+    def load_img(self, file_path, ratio=1.,):
         w, h = self.canvas_wh()
         self.imager.load(file_path, ratio=ratio, max_w=w, max_h=h)
         self.crop_box.update_size(w, h)
-    
+
+
