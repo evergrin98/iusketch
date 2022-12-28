@@ -10,7 +10,7 @@ import pyautogui as pg
 import imageio
 from PIL import Image, ImageTk, ImageGrab
 
-from utils.guis import BaseGuiClass
+from utils.guis import BaseGuiClass, unit_x, unit_y
 from utils.files import dir_path_change
 
 from classes.sketch_canvas import SketchCanvas
@@ -23,7 +23,10 @@ class FrameMaker(BaseGuiClass):
     '''
 
     def __init__(self):
-        ''' widget들을 생성. '''
+        '''
+        widget들을 생성.
+        w, h는 unit_x, unit_y의 배수 크기를 의미함.
+        '''
         super().__init__()
 
         self.title("FrameMaker")
@@ -67,7 +70,7 @@ class FrameMaker(BaseGuiClass):
 
 
         # canvas 512*512 추가.
-        self.canvas_wgt = self.add_canvas(x=2, y=6, w=64, h=32)
+        self.canvas_wgt = self.add_canvas(x=2, y=6, w=int(cfg.CANVAS_W/unit_x), h=int(cfg.CANVAS_H/unit_y))
         self.canvas = SketchCanvas(self.canvas_wgt, 'yellow', 'black')
 
         xy = self.next_xy(offset=34)

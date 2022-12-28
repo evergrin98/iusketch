@@ -178,7 +178,9 @@ class SketchCanvas():
         self.crop_box.update()
 
     def canvas_wh(self):
-        return self.canvas.winfo_reqwidth(), self.canvas.winfo_reqheight()
+        # size가 514로 읽혀져 512로 값으로 설정.
+        # return self.canvas.winfo_reqwidth(), self.canvas.winfo_reqheight()
+        return cfg.CANVAS_SIZE
 
 
     def load_img(self, file_path, ratio=1.,):

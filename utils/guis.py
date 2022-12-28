@@ -71,7 +71,7 @@ class BaseGuiClass(tk.Tk):
 
 
     def add_canvas(self, x=0, y=0, w=0, h=0):
-        wgt = tk.Canvas(self, bd=2, bg='white', width=w*unit_x, height=h*unit_y)
+        wgt = tk.Canvas(self, bd=0, bg='white', width=w*unit_x, height=h*unit_y)
         self.unit_place(wgt, x, y, w, h)
         return wgt
 
