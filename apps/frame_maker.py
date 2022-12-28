@@ -62,11 +62,13 @@ class FrameMaker(BaseGuiClass):
         self.open_dir_btn = self.add_button("open", command=self.open_dir_btn_handler, **xy, w=10)
 
         xy = self.next_xy(p, offset=3)
-        self.img_label = self.add_label("None", **xy, w=30)
+        self.img_label = self.add_label("None", **xy, w=20)
         xy = self.side_xy(offset=1)
         self.load_img_btn = self.add_button("select", command=self.load_img_btn_handler, **xy, w=10)
         xy = self.side_xy(offset=1)
-        self.batch_load_btn = self.add_button("Batch Start", command=self.batch_load_btn_handler, **xy, w=14)
+        self.batch_load_btn = self.add_button("Batch Start", command=self.batch_load_btn_handler, **xy, w=10)
+        xy = self.side_xy(offset=1)
+        self.batch_load_btn = self.add_button("save clip", command=self.save_clip_to_gif, **xy, w=10)
 
 
         # canvas 512*512 추가.
@@ -161,8 +163,9 @@ class FrameMaker(BaseGuiClass):
             return
         elif event.char == 'v':
             ''' img_clips to gifs '''
-            file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
-            self.canvas.to_video_clip(file_name, crop=False, reverse=False)
+            self.save_clip_to_gif()
+            # file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
+            # self.canvas.to_video_clip(file_name, crop=False, reverse=False)
             return
         elif event.char == 'b':
             self.canvas.undo()
@@ -185,9 +188,15 @@ class FrameMaker(BaseGuiClass):
         self.update_crop_box()
 
 
+    def save_clip_to_gif(self):
+        ''' img_clips to gifs '''
+        file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
+        self.canvas.to_video_clip(file_name, crop=False, reverse=False)
+
+
     def open_dir_btn_handler(self):
         if os.name == 'nt':
-            print("not supported")
+            os.system(f"explorer {self.save_img_dir} &")
         else:
             os.system(f"nautilus {self.save_img_dir} &")
 
