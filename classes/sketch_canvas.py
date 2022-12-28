@@ -119,21 +119,24 @@ class SketchCanvas():
 
 
     def to_video_clip(self, save_path, crop=False, reverse=False):
+        '''
+        empty image는 추가 안함.
+        reverse : False: 하나씩 그려가면서 이미지 저장.
+        reverse : True: 하나씩 지워가면서 이미지 저장.
+        '''
         clips = VideoClip()
         draw_items = self.drawer.get_draw_items()
 
-        # items = items.reverse()
+        # 전체 이미지를 첫 이미지로 설정.
+        frm = self.to_image_frame(crop=crop)
+        clips.append(frm)
+
+        # 모든 이미지를 지우고...
         for items in draw_items:
             for item in items:
                 self.canvas.itemconfig(item, state='hidden')
 
-        # self.drawer.all_hide()
-
-        # add empty image
-        frm = self.to_image_frame(crop=True)
-        clips.append(frm)
-
-        # add each item image
+        # 그림 그리는 각 스텝을 이미지로 저장함.
         prev_items = None
         for items in draw_items:
             for item in items:
@@ -147,6 +150,7 @@ class SketchCanvas():
             frm = self.to_image_frame(crop=True)
             clips.append(frm)
 
+        # 다시 모든 이미지를 표시(복구).
         for items in draw_items:
             for item in items:
                 self.canvas.itemconfig(item, state='normal')

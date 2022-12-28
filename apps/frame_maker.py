@@ -66,7 +66,7 @@ class FrameMaker(BaseGuiClass):
         xy = self.side_xy(offset=1)
         self.load_img_btn = self.add_button("select", command=self.load_img_btn_handler, **xy, w=10)
         xy = self.side_xy(offset=1)
-        self.batch_crop_btn = self.add_button("Crop All", command=self.batch_crop_btn_handler, **xy, w=10)
+        self.batch_load_btn = self.add_button("Batch Start", command=self.batch_load_btn_handler, **xy, w=14)
 
 
         # canvas 512*512 추가.
@@ -162,7 +162,7 @@ class FrameMaker(BaseGuiClass):
         elif event.char == 'v':
             ''' img_clips to gifs '''
             file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
-            self.canvas.to_video_clip(file_name, crop=True, reverse=False)
+            self.canvas.to_video_clip(file_name, crop=False, reverse=False)
             return
         elif event.char == 'b':
             self.canvas.undo()
@@ -186,7 +186,10 @@ class FrameMaker(BaseGuiClass):
 
 
     def open_dir_btn_handler(self):
-        os.system(f"nautilus {self.save_img_dir} &")
+        if os.name == 'nt':
+            print("not supported")
+        else:
+            os.system(f"nautilus {self.save_img_dir} &")
 
 
     def load_dir_btn_handler(self):
@@ -211,7 +214,7 @@ class FrameMaker(BaseGuiClass):
         ''' 로드할 이미지 파일 선택.'''
 
         file_path = ""
-        ''' 배치 crop중인가? '''
+        ''' 배치 동작 중인가? '''
         if self.next_batch_idx != -1:
 
             ''' 모든 이미지를 배치 처리했는가?  '''
@@ -229,18 +232,26 @@ class FrameMaker(BaseGuiClass):
         self.load_img_file(file_path)
 
 
-    def batch_crop_btn_handler(self):
+    def batch_load_btn_handler(self):
         '''
-        load에 있는 모든 파일에 대하여 crop을 배치 진행함.
-        self.next_batch_idx가 -1이 아니면 crop완료시 next버튼으로 이어서 진행.
+        self.next_batch_idx -1이 아닌경우
+        'l'키를 눌러서 이미지 로드시 load폴더의 이미지에 대해 load시 선택없이 다음 파일 자동 open.
+        toggle 동작함.
+        self.next_batch_idx가 -1이 아니면 배치 동작 완료.
         '''
-        self.batch_img_list = glob.glob(os.path.join(self.load_img_dir, '*.png'))
-        self.batch_img_list.sort()
+        if self.next_batch_idx == -1:
+            self.batch_img_list = glob.glob(os.path.join(self.load_img_dir, '*.png'))
+            self.batch_img_list.sort()
 
-        if len(self.batch_img_list) > 0:
-            self.next_batch_idx = 0
-            print(f"batch crop start: {len(self.batch_img_list)} images")
-            self.load_img_btn_handler()
+            if len(self.batch_img_list) > 0:
+                self.next_batch_idx = 0
+                print(f"이미지 자동 open start: {len(self.batch_img_list)} images")
+                self.batch_load_btn["text"] = "Batch Stop"
+                self.load_img_btn_handler()
+        else:
+            self.next_batch_idx = -1
+            self.batch_load_btn["text"] = "Batch Start"
+            print("이미지 자동 open stoped")
 
 
     def load_img_file(self, file_path):
