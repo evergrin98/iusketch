@@ -1,6 +1,8 @@
 import tkinter as tk
 
-from utils.guis import BaseGuiClass
+import config_env as cfg
+
+from utils.guis import BaseGuiClass, unit_x, unit_y
 from classes.image_frame import ImgFrame
 from classes.video_clip import VideoClip
 from classes.sketch_canvas import SketchCanvas
@@ -28,7 +30,7 @@ class SketcherDialog(BaseGuiClass):
             **xy, w=30, h=2,
         )
         
-        self.canvas_wgt = self.add_canvas(x=2, y=4, w=64, h=32)
+        self.canvas_wgt = self.add_canvas(x=2, y=4, w=int(cfg.CANVAS_W/unit_x), h=int(cfg.CANVAS_H/unit_y))
         self.canvas = SketchCanvas(self.canvas_wgt)
         
         xy = self.side_xy(offset=2)
