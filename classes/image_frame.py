@@ -111,11 +111,16 @@ class ImgFrame():
             # grayscale은 2dim
             return Image.fromarray(np.squeeze(arry, axis=2), 'L')
         else:
-            raise Exception("invalid image shape")    
+            raise Exception("invalid image shape")
 
 
-    def to_image(self):
-        return self.valid_image()
+    def to_image(self, save_file=""):
+
+        if len(save_file) > 0:
+            img = self.valid_image()
+            img.save(save_file)
+        else:
+            return self.valid_image()
 
 
     def to_flatten_image(self):
@@ -171,14 +176,26 @@ class ImgFrame():
 
         if self.arry.shape[0:2] != arry.shape[0:2]:
             raise Exception("width x height not correct")
-        
+
         self.arry = np.dstack((self.arry, arry))
 
 
-    def merged(self):
-        arry = np.min(self.arry, axis=2)
+    def merged(self, merge_fn=np.min):
+        '''
+        channel방향으로 어레이를 합침.
+          - 채널1개(grayscale)만 고려함.
+        합치는 방법은 흰색에 검은색 이미지는 np.min사용
+        '''
+        arry = merge_fn(self.arry, axis=2)
         arry = self.clip(arry)
         arry = self.valid_arry(arry)
+
+        if arry.shape[0:2] != arry.shape[0:2]:
+            raise Exception("width x height not correct")
+
+        if arry.shape[2] != 1:
+            raise Exception("merged channel not 1")
+
         return arry
 
 
