@@ -113,18 +113,26 @@ class ImgFrame():
         else:
             raise Exception("invalid image shape")    
 
+
     def to_image(self):
         return self.valid_image()
 
+
     def to_flatten_image(self):
         return self.valid_image(self.merged())
+
 
     def __str__(self):
         str = f"{self.arry.shape}, use:{self.use}"
         return str
 
+
     def shape(self):
         return self.arry.shape
+
+
+    def img_wh(self):
+        return self.arry.shape[0], self.arry.shape[1]
 
 
     def imgSum(self, img):
@@ -140,14 +148,14 @@ class ImgFrame():
 
 
     def imgResize(self, width, height):
-        ''' 
-        이미지 크기 변경. 
+        '''
+        이미지 크기 변경.
         channel이 4보다 클때는 지원안됨..
         '''
         img = self.valid_image()
         img = img.resize((height, width))
         self.arry = self.valid_arry(np.asarray(img, ImgFrame.ary_dtype))
-    
+
 
     def append_channel(self, img):
         '''

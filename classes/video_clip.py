@@ -103,13 +103,20 @@ class VideoClip():
         return imgfrm
 
     
-    def make_gif(self, gif_file, reverse=False):
+    def make_gif(self, gif_file, reverse=False, ratio=1.0):
         '''
         frame들을 gif파일로 만든다.
         '''
         frames = list()
         for img_frm in self.clips:
             if img_frm.use is True:
+
+                if ratio != 1.0:
+                    w, h = img_frm.img_wh()
+                    w = int(w * ratio)
+                    h = int(h * ratio)
+                    img_frm.imgResize(w, h)
+
                 img = img_frm.to_image()
                 frames.append(img)
         
