@@ -33,6 +33,17 @@ class FrameMaker(BaseGuiClass):
         self.geometry('550x700')
         self.resizable(0, 0)
 
+        if os.name == 'nt':
+            self.left_key = 37
+            self.up_key = 38
+            self.right_key = 39
+            self.down_key = 40
+        else:
+            self.left_key = 113
+            self.up_key = 111
+            self.right_key = 114
+            self.down_key = 116
+
         self.load_base_path = cfg.IMG_LOAD_BASE_PATH
         self.save_base_path = cfg.IMG_SAVE_BASE_PATH
         self.load_img_dir = self.load_base_path
@@ -125,13 +136,13 @@ class FrameMaker(BaseGuiClass):
             self.canvas.crop_box.zoom_in()
         elif event.char == '-':
             self.canvas.crop_box.zoom_out()
-        elif event.keycode == 114: # right-arrow key
+        elif event.keycode == self.right_key: # right-arrow key
             self.canvas.crop_box.right()
-        elif event.keycode == 113: # left-arrow key
+        elif event.keycode == self.left_key: # left-arrow key
             self.canvas.crop_box.left()
-        elif event.keycode == 111: # up-arrow key
+        elif event.keycode == self.up_key: # up-arrow key
             self.canvas.crop_box.up()
-        elif event.keycode == 116: # down-arrow key
+        elif event.keycode == self.down_key: # down-arrow key
             self.canvas.crop_box.down()
         elif event.char == 'c':
             ''' crop image & save to png '''
@@ -191,7 +202,7 @@ class FrameMaker(BaseGuiClass):
     def save_clip_to_gif(self):
         ''' img_clips to gifs '''
         file_name = dir_path_change(self.file_path, self.save_img_dir, 'gif')
-        self.canvas.to_video_clip(file_name, crop=False, reverse=False)
+        self.canvas.to_video_clip(file_name, crop=True, reverse=False)
 
 
     def open_dir_btn_handler(self):
