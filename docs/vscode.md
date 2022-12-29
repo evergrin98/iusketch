@@ -101,3 +101,5 @@ git 저장소 생성하기
  
 변경 내용을 merge 하기 전에 바뀐 내용 비교
 - git diff [브랜치 이름] [다른 브랜치 이름]
+
+!path 설정 ghostscript설정
