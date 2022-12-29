@@ -10,12 +10,16 @@ https://code.visualstudio.com/
 간단히 필요한 것들 예시.
 
 이름: Python
+
 ID: ms-python.python
+
 설명: IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.
+
 버전: 2022.20.1
+
 게시자: Microsoft
+
 VS Marketplace 링크: https://marketplace.visualstudio.com/items?itemName=ms-python.python
-##디버그
 
 이름: Pylance
 ID: ms-python.vscode-pylance
