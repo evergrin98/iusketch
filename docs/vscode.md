@@ -7,11 +7,40 @@ https://code.visualstudio.com/
 
 ![2](https://user-images.githubusercontent.com/112140363/209625787-a5d4bb83-9dcb-4006-a384-5098430c1520.png)
 
+간단히 필요한 것들 예시.
+
+이름: Python
+ID: ms-python.python
+설명: IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), Jupyter Notebooks, code formatting, refactoring, unit tests, and more.
+버전: 2022.20.1
+게시자: Microsoft
+VS Marketplace 링크: https://marketplace.visualstudio.com/items?itemName=ms-python.python
 ##디버그
 
+이름: Pylance
+ID: ms-python.vscode-pylance
+설명: A performant, feature-rich language server for Python in VS Code
+버전: 2022.12.20
+게시자: Microsoft
+VS Marketplace 링크: https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance
 https://demun.github.io/vscode-tutorial/debug/
 
+이름: Korean Language Pack for Visual Studio Code
+ID: MS-CEINTL.vscode-language-pack-ko
+설명: Language pack extension for Korean
+버전: 1.74.12140931
+게시자: Microsoft
+VS Marketplace 링크: https://marketplace.visualstudio.com/items?itemName=MS-CEINTL.vscode-language-pack-ko
 튜토리얼 링크 들어가서 확인
+
+이름: Jupyter
+ID: ms-toolsai.jupyter
+설명: Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.
+버전: 2022.11.1003412109
+게시자: Microsoft
+VS Marketplace 링크: https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter
+
+필요한 확장 도구들 설치
 
 ##GIT 설치
 
