@@ -3,9 +3,7 @@ from tkinter import filedialog, ttk
 
 import config_env as cfg
 
-import pyautogui as pg
-import imageio
-from PIL import Image, ImageTk, ImageGrab
+from PIL import Image
 
 import math, os
 import numpy as np
