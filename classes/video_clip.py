@@ -1,11 +1,10 @@
-import copy
-from PIL import Image
-# from PIL.PngImagePlugin import PngImageFile
 import numpy as np
 import random
 
+from PIL import Image
 import imageio
 import imageio.v3 as iio    # gif
+# from PIL.PngImagePlugin import PngImageFile
 
 from classes.image_frame import ImgFrame
 
@@ -96,6 +95,26 @@ class VideoClip():
     def __str__(self):
         str = f"clip:{self.count()}/{self.max_clip}, {self.shape}"
         return str
+
+
+    def resize(self, w, h, inplace=True):
+        '''
+        clips의 모든 frame을 resize한다.
+        inplace인경우는, 내부 clip을 resize한다. 
+        '''
+        if inplace:
+            # 내부 변수를 수정하므로, shape는 별도로 갱신한다.
+            for img_frm in self.clips:
+                img_frm.imgResize(w, h, inplace=True)
+            
+            self.shape = self.clips[0].shape()
+            return self
+        else:
+            vclip = VideoClip()
+            for img_frm in self.clips:
+                img_frm = ImgFrame(img_frm.imgResize(w, h, inplace=False))
+                vclip.append(img_frm)
+            return vclip
 
 
     def append(self, imgfrm):
@@ -236,7 +255,7 @@ class VideoClip():
 
     def stacked_frames_clip(self, step=1):
         '''
-        clips에서
+        clips에서 그려진 부분을 누적하여 frame생성.
         step==1인경우 0, 0-1, 0-2, 0-3, ... 0-n까지 stack한 frame들로 clip을 생성.
         step==2인 경우, 0, 0-2, 0-4, 0-6... 0-n까지 stack한 frame들로 clip생성.
         지금은 grayscale된 1채널만 동작함.
@@ -282,19 +301,40 @@ if __name__ == "__main__":
     gif_list = glob.glob(os.path.join(IMG_LOAD_BASE_PATH, "*.gif"))
     gif_file = gif_list[0]
 
-    for i in range(2):
-        vclip = VideoClip()
-        vclip.load_gif(gif_file, grayscale=True)
+    vclip = VideoClip()
+    vclip.load_gif(gif_file, grayscale=True)
 
-        # newclip = vclip.random_clips()
-        newclip = vclip.sequential_clips(count=10, reverse=True)
-        varry = newclip.to_array()
-        print(varry.shape)
+    arrys = []
+    arry1 = vclip.to_array()
+    arry2 = vclip.to_array()
+    print(arry1.shape, arry2.shape)
+    
+    arrys.append(arry1)
+    arrys.append(arry2)
+    
+    arrys = np.stack(arrys)
+    print(arrys.shape)
 
-        stacked_clip = newclip.stacked_frames_clip(step=2)
+    # for i in range(1):
+    #     vclip = VideoClip()
+    #     vclip.load_gif(gif_file, grayscale=True)
 
-        new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
-        stacked_clip.make_gif(new_file)
+    #     # newclip = vclip.random_clips()
+    #     newclip = vclip.sequential_clips(count=10, reverse=True)
+    #     varry = newclip.to_array()
+    #     print(varry.shape)
 
+    #     stacked_clip = newclip.stacked_frames_clip(step=2)
+    #     resized_clip = stacked_clip.resize(64, 32, inplace=False)
+
+    #     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    #     stacked_clip.make_gif(new_file)
+
+    #     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    #     resized_clip.make_gif(new_file)
+
+    #     stacked_clip.resize(12, 12, inplace=True)
+    #     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    #     stacked_clip.make_gif(new_file)
 
         

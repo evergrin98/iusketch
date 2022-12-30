@@ -152,14 +152,20 @@ class ImgFrame():
         return ImgFrame(arry, self.use)
 
 
-    def imgResize(self, width, height):
+    def imgResize(self, width, height, inplace=True):
         '''
         이미지 크기 변경.
         channel이 4보다 클때는 지원안됨..
         '''
         img = self.valid_image()
-        img = img.resize((height, width))
-        self.arry = self.valid_arry(np.asarray(img, ImgFrame.ary_dtype))
+        img = img.resize((width, height))
+
+        arry = self.valid_arry(np.asarray(img, ImgFrame.ary_dtype))
+
+        if inplace:
+            self.arry = arry
+
+        return arry
 
 
     def append_channel(self, img):
