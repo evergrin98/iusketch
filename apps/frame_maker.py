@@ -1,19 +1,14 @@
-import time, os
+import os
 import glob
-
-import config_env as cfg
-
 import tkinter as tk
 from tkinter import filedialog
 
-import pyautogui as pg
-import imageio
-from PIL import Image, ImageTk, ImageGrab
+import config_env as cfg
 
 from utils.guis import BaseGuiClass, unit_x, unit_y
 from utils.files import dir_path_change
-
 from classes.sketch_canvas import SketchCanvas
+
 
 
 
@@ -79,7 +74,7 @@ class FrameMaker(BaseGuiClass):
         xy = self.side_xy(offset=1)
         self.batch_load_btn = self.add_button("Batch Start", command=self.batch_load_btn_handler, **xy, w=10)
         xy = self.side_xy(offset=1)
-        self.batch_load_btn = self.add_button("save clip", command=self.save_clip_to_gif, **xy, w=10)
+        self.save_clip_btn = self.add_button("save clip", command=self.save_clip_to_gif, **xy, w=10)
 
 
         # canvas 512*512 추가.
