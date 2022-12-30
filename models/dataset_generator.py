@@ -13,7 +13,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, is_train=False):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, is_train=False, for_enc=False):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -27,6 +27,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.batch_size = batch_size
         self.is_train = is_train
         self.shuffle = True
+        self.for_enc = for_enc
         self.data_count = len(self.imgs)
 
         # self.on_epoch_end()
@@ -69,14 +70,17 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
         clips = np.stack(clips)
 
-        return self.create_shifted_frames(clips)
+        if self.for_enc:
+            return self.create_shifted_frames(clips, offset=0)
+        else:
+            return self.create_shifted_frames(clips, offset=1)
 
 
-    def create_shifted_frames(self, clips):
+    def create_shifted_frames(self, clips, offset=1):
         ''' frame들로 x, y 데이터를 생성함. '''
         time_step = clips.shape[1]
-        x = clips[:, 0 : time_step - 1, :, :]
-        y = clips[:, 1 : time_step, :, :]
+        x = clips[:, 0 : time_step - offset, :, :]
+        y = clips[:, offset : time_step, :, :]
         return x, y
 
 
