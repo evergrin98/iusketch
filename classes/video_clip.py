@@ -2,8 +2,8 @@ import numpy as np
 import random
 
 from PIL import Image
-import imageio
-import imageio.v3 as iio    # gif
+import imageio as iio
+# import imageio.v3 as iio    # gif
 # from PIL.PngImagePlugin import PngImageFile
 
 from classes.image_frame import ImgFrame
@@ -49,7 +49,7 @@ class VideoClip():
         '''
         gif파일로 frame들을 만든다.
         '''
-        gif = iio.imread(gif_file, index=None)
+        gif = iio.v3.imread(gif_file, index=None)
         if gif.ndim != 4:
             raise Exception("gif dim not correct")
         if gif.shape[3] != 3:
@@ -175,7 +175,7 @@ class VideoClip():
         if reverse:
             frames.reverse()
 
-        imageio.mimsave(gif_file, frames, "GIF", fps=5)
+        iio.mimsave(gif_file, frames, "GIF", fps=5)
         print(gif_file, " saved")
 
 
