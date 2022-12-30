@@ -18,7 +18,7 @@ class VideoClip():
     w,h이 동일한 frame만 보관.
     0번이 처음이고 가장 아래 frame임.
     '''
-    def __init__(self, shape=None, max_clip=100, frames=[]):
+    def __init__(self, frames=[], gif_path="", shape=None, max_clip=100):
         ''' 
         VideoClip 생성자.
         frames가 있으면 복사 생성함. 
@@ -29,6 +29,8 @@ class VideoClip():
 
         if len(frames) > 0:
             self.load_frames(frames)
+        elif len(gif_path) > 0:
+            self.load_gif(gif_path)
 
 
     def load_frames(self, frames):
@@ -65,6 +67,13 @@ class VideoClip():
             imgfrm = ImgFrame(img)
             self.append(imgfrm)
 
+
+    def to_array(self):
+        '''
+        [frames, height, width, channel]의 4차원 array로 전달.
+        '''
+        frames = [ img_frm.arry for img_frm in self.clips]
+        return np.array(frames)
 
 
     def count(self):
@@ -278,7 +287,9 @@ if __name__ == "__main__":
         vclip.load_gif(gif_file, grayscale=True)
 
         # newclip = vclip.random_clips()
-        newclip = vclip.sequential_clips(reverse=True)
+        newclip = vclip.sequential_clips(count=10, reverse=True)
+        varry = newclip.to_array()
+        print(varry.shape)
 
         stacked_clip = newclip.stacked_frames_clip(step=2)
 

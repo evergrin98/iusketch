@@ -10,7 +10,7 @@ class ImgFrame():
         Image의 한 frame을 나타냄.  arry.ndim은 3이어야 함.
         arry(float, 0 - 1.0) : height, width, channel순서의 3차원(h, w, c)
         use: 사용여부
-
+        arry는 항상 normalized된 상태로 보관.
         생성시에는 string, Image, ImgFrame, array 입력 가능함.
         나머지 함수는 ImgFrame이나 arry만 입력받음.
     '''
