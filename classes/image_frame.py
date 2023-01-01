@@ -36,7 +36,7 @@ class ImgFrame():
         return np.clip(arry, min_val, max_val)
 
 
-    def __init__(self, img, use=True, grayscale=False):
+    def __init__(self, img, use=True, grayscale=False, do_norm=True):
         '''
             생성 인자로 string, Image, ImgFrame, array 입력 가능함.
         '''
@@ -54,7 +54,7 @@ class ImgFrame():
 
         else:
             # ndarray 입력시.
-            self.arry = self.valid_arry(img)
+            self.arry = self.valid_arry(img, do_norm=do_norm)
             self.use = use
 
 
@@ -71,7 +71,7 @@ class ImgFrame():
         self.arry = self.valid_arry(imgfrm.arry)
         self.use = imgfrm.use
 
-    def valid_arry(self, arry):
+    def valid_arry(self, arry, do_norm=True):
         '''
         ndim == 3(h,w,c)인 ndarray로 만듦.
         channel수는 고정하지 않음.
@@ -88,7 +88,10 @@ class ImgFrame():
         elif arry.ndim != 3:
             raise Exception("shape not correct!!")
 
-        return self.norm(arry)
+        if do_norm:
+            return self.norm(arry)
+        else:
+            return arry
 
 
     def valid_image(self, arry=None):
@@ -119,6 +122,7 @@ class ImgFrame():
         if len(save_file) > 0:
             img = self.valid_image()
             img.save(save_file)
+            return img
         else:
             return self.valid_image()
 
