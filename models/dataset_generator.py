@@ -57,8 +57,10 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             clip.resize(self.img_w, self.img_h, inplace=True)
 
             # raw clip에서 TIME_STEP 개수의 프레임만 가져온다.
-            clip = clip.sequential_clips(count=self.time_step + 1, reverse=False)
-            # clip = clip.random_clips(count=count)
+            if self.for_enc:
+                clip = clip.random_clips(count=self.time_step + 1)
+            else:
+                clip = clip.sequential_clips(count=self.time_step + 1, reverse=False)
 
             # 그려진 부분을 누적하여 frame을 생성.
             clip = clip.stacked_frames_clip(step=1)
