@@ -67,12 +67,17 @@ class VideoClip():
             self.append(imgfrm)
 
 
-    def to_array(self):
+    def to_array(self, expand=False):
         '''
         [frames, height, width, channel]의 4차원 array로 전달.
+        expand : True이면 5차원으로 확장함.
         '''
         frames = [ img_frm.arry for img_frm in self.clips]
-        return np.array(frames)
+        arry_4d = np.array(frames)
+        if expand:
+            return np.expand_dims(arry_4d, axis=0)
+        else:
+            return arry_4d
 
 
     def count(self):

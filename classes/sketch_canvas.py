@@ -108,12 +108,40 @@ class SketchCanvas():
         if crop:
             img = img.crop((self.crop_box.rect()))
         else:
-            img = img.crop((0, 0, *self.imager.image_wh()))
+            # img = img.crop((0, 0, *self.imager.image_wh()))
+            pass
 
         self.imager.show()
         self.crop_box.show()
 
         return ImgFrame(img)
+
+
+    def last_draw_clip(self, max_count=20):
+        '''
+        inference시 사용할 수 있도록 마지막 frame을
+        그림 그리는 순서대로 누적하여 clip생성함.
+        '''
+        clips = VideoClip()
+        draw_items = self.drawer.get_draw_items()
+
+        count = min(len(draw_items), max_count)
+        draw_items = draw_items[-count:]
+
+        # 모든 이미지를 지우고...
+        for items in draw_items:
+            for item in items:
+                self.canvas.itemconfig(item, state='hidden')
+
+        # 그림 그리는 각 스텝을 이미지로 저장함.
+        for items in draw_items:
+            for item in items:
+                self.canvas.itemconfig(item, state='normal')
+
+            frm = self.to_image_frame(crop=False)
+            clips.append(frm)
+
+        return clips
 
 
     def to_video_clip(self, save_path, crop=False, reverse=False):
@@ -154,6 +182,7 @@ class SketchCanvas():
                 self.canvas.itemconfig(item, state='normal')
 
         # add all item image
+        # TODO: 전체 이미지가 두번 추가되어 이부분은 막아야함.
         frm = self.to_image_frame(crop=True)
         clips.append(frm)
 

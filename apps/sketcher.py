@@ -3,6 +3,7 @@ import tkinter as tk
 import config_env as cfg
 
 from utils.guis import BaseGuiClass, unit_x, unit_y
+
 from classes.image_frame import ImgFrame
 from classes.video_clip import VideoClip
 from classes.sketch_canvas import SketchCanvas
@@ -71,6 +72,11 @@ class SketcherDialog(BaseGuiClass):
             return
         elif event.char == 'n':
             self.canvas.redo()
+            return
+        elif event.char == 'l':
+            clip = self.canvas.last_draw_clip(max_count=cfg.DATA_TIME_STEP)
+            clip.make_gif(cfg.USER_DRAW_FILE)
+            
             return
         else:
             print(event, event.keycode)
