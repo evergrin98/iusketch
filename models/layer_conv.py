@@ -20,10 +20,10 @@ class Conv2Plus1D(keras.layers.Layer):
                         strides=(1, stride, stride),
                         padding=padding),
             # Temporal decomposition
-            layers.Conv3D(filters=filters,
-                        kernel_size=(kernel_size[0], 1, 1),
-                        strides=1,
-                        padding=padding)
+            # layers.Conv3D(filters=filters,
+            #             kernel_size=(kernel_size[0], 1, 1),
+            #             strides=1,
+            #             padding=padding)
             ])
 
         # self.conv1 = layers.Conv3D(filters=filters,
@@ -62,10 +62,10 @@ class TConv2Plus1D(keras.layers.Layer):
                         strides=(1, stride, stride),
                         padding=padding),
             # Temporal decomposition
-            layers.Conv3DTranspose(filters=filters, 
-                        kernel_size=(kernel_size[0], 1, 1),
-                        strides=1,
-                        padding=padding)
+            # layers.Conv3DTranspose(filters=filters, 
+            #             kernel_size=(kernel_size[0], 1, 1),
+            #             strides=1,
+            #             padding=padding)
             ])
 
     def call(self, x):

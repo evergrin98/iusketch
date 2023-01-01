@@ -18,7 +18,7 @@ class Encoder5D(keras.layers.Layer):
         
         for cnt in range(kernel_count):
             self.seq.add( Conv2Plus1D(filters*2**cnt, kernel_size, stride, padding))
-            self.seq.add( layers.LayerNormalization())
+            self.seq.add( layers.BatchNormalization())
             self.seq.add( layers.ReLU())
             # self.seq.add( keras.activations.sigmoid)
 
@@ -40,11 +40,11 @@ class Decoder5D(keras.layers.Layer):
 
         for cnt in range(kernel_count-1, -1, -1):
             self.seq.add( TConv2Plus1D(filters*2**cnt, kernel_size, stride, padding))
-            self.seq.add( layers.LayerNormalization())
+            self.seq.add( layers.BatchNormalization())
             self.seq.add( layers.ReLU())
 
         self.seq.add(Conv2Plus1D(out_channel, kernel_size, 1, padding="same"))
-        self.seq.add( layers.LayerNormalization())
+        self.seq.add( layers.BatchNormalization())
         self.seq.add( layers.ReLU())
 
     def call(self, x):
