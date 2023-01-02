@@ -1,10 +1,11 @@
 from classes.video_clip import VideoClip
 
 import random
+import cv2
 import numpy as np
 import tensorflow as tf
 
-from albumentations import  Compose, HorizontalFlip
+from albumentations import  Compose, HorizontalFlip, CropAndPad
 
 
 
@@ -35,6 +36,8 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
         self.augmentation_list = [None, ]
         self.augmentation_list.append(Compose([HorizontalFlip(p=1.0)])) # 좌우대칭
+        self.augmentation_list.append(Compose([CropAndPad(
+            percent=(-0.2, 0.2), p=1.0, pad_mode=cv2.BORDER_CONSTANT, pad_cval=1.0, keep_size=True)])) # crop and pad(size same)
 
         # self.on_epoch_end()
 
