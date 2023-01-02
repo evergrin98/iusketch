@@ -286,6 +286,19 @@ class VideoClip():
         return vclip
 
 
+    def augmentation(self, augmentator=None):
+        ''' 
+        augumentation을 받아서 각 프레임에 대해서 실행함.
+        '''
+        if augmentator is None:
+            return self
+
+        vclip = VideoClip()
+        for img_frm in self.clips:
+            augmentated = augmentator(image=img_frm.arry)
+            vclip.append(ImgFrame(img=augmentated["image"]))
+        return vclip
+
 
 
 

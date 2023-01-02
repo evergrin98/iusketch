@@ -4,6 +4,8 @@ import random
 import numpy as np
 import tensorflow as tf
 
+from albumentations import  Compose, HorizontalFlip
+
 
 
 class DataSetGenerator(tf.keras.utils.Sequence):
@@ -30,6 +32,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.shuffle = True
         self.for_enc = for_enc
         self.data_count = len(self.imgs)
+
+        self.augmentation_list = [None, ]
+        self.augmentation_list.append(Compose([HorizontalFlip(p=1.0)])) # 좌우대칭
 
         # self.on_epoch_end()
 
@@ -72,7 +77,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             # 그려진 부분을 누적하여 frame을 생성.
             clip = clip.stacked_frames_clip(step=leap_step)
 
-            #TODO: augmentation.
+            # 랜덤하게 augmentation 실행.
+            augment = random.choices(population=self.augmentation_list, k=1)[0]
+            clip = clip.augmentation(augment)
 
 
             clips.append(clip.to_array())
