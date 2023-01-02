@@ -39,6 +39,7 @@ class ImgFrame():
     def __init__(self, img, use=True, grayscale=False, do_norm=True):
         '''
             생성 인자로 string, Image, ImgFrame, array 입력 가능함.
+            array입력시 do_norm 옵션 필히 확인!!
         '''
         if isinstance(img, str):
             pilImg = Image.open(img)
@@ -68,7 +69,7 @@ class ImgFrame():
 
     def copy_from(self, imgfrm):
         ''' ImgFrame으로부터 복사 생성 '''
-        self.arry = self.valid_arry(imgfrm.arry)
+        self.arry = self.valid_arry(imgfrm.arry, do_norm=False)
         self.use = imgfrm.use
 
     def valid_arry(self, arry, do_norm=True):

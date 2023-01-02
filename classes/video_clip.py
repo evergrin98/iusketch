@@ -117,7 +117,7 @@ class VideoClip():
         else:
             vclip = VideoClip()
             for img_frm in self.clips:
-                img_frm = ImgFrame(img_frm.imgResize(w, h, inplace=False))
+                img_frm = ImgFrame(img_frm.imgResize(w, h, inplace=False), do_norm=False)
                 vclip.append(img_frm)
             return vclip
 
@@ -196,7 +196,7 @@ class VideoClip():
             if img.use is True:
                 imgfrm.append_channel(img)
 
-        return ImgFrame(imgfrm.merged())
+        return ImgFrame(imgfrm.merged(), do_norm=False)
 
 
     def random_clips(self, count=20, include_top=False):
@@ -278,7 +278,7 @@ class VideoClip():
             else:
                 stacked_frame.append_channel(frame)
 
-            img_frame = ImgFrame(stacked_frame.merged())
+            img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
 
             if idx % step == 0:
                 vclip.append(img_frame)
