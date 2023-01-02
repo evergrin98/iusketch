@@ -1,5 +1,6 @@
 from classes.video_clip import VideoClip
 
+import random
 import numpy as np
 import tensorflow as tf
 
@@ -53,17 +54,23 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             # gif파일을 VideoClip으로 변경.(norm되어 있음.)
             clip = VideoClip(gif_path=self.imgs[idx])
 
+            # 프레임 개수에 따라 leap_step을 랜덤 선택하고 프레임을 골라서 누적한다.
+            frm_cnt = clip.count() - 2
+            max_leap_step = frm_cnt // (self.time_step + 1)
+            leap_step = random.randint(0, max_leap_step) + 1
+            pick_count = leap_step * (self.time_step + 1)
+
             # clip 사이즈(width, height) 설정.
             clip.resize(self.img_w, self.img_h, inplace=True)
 
             # raw clip에서 TIME_STEP 개수의 프레임만 가져온다.
             if self.for_enc:
-                clip = clip.random_clips(count=self.time_step + 1)
+                clip = clip.random_clips(count=pick_count)
             else:
-                clip = clip.sequential_clips(count=self.time_step + 1, reverse=False)
+                clip = clip.sequential_clips(count=pick_count, reverse=False)
 
             # 그려진 부분을 누적하여 frame을 생성.
-            clip = clip.stacked_frames_clip(step=1)
+            clip = clip.stacked_frames_clip(step=leap_step)
 
             #TODO: augmentation.
 
