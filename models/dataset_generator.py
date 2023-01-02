@@ -57,7 +57,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             # 프레임 개수에 따라 leap_step을 랜덤 선택하고 프레임을 골라서 누적한다.
             frm_cnt = clip.count() - 2
             max_leap_step = frm_cnt // (self.time_step + 1)
-            leap_step = random.randint(0, max_leap_step) + 1
+            leap_step = random.randint(1, max_leap_step)
             pick_count = leap_step * (self.time_step + 1)
 
             # clip 사이즈(width, height) 설정.
