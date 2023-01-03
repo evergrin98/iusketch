@@ -27,7 +27,7 @@ class ImgFrame():
 
     @staticmethod
     def denorm(arry):
-        if np.max(arry) <= 1.0:
+        if True: #np.max(arry) <= 1.0:
             arry = arry * 255.
         return arry.astype(ImgFrame.img_dtype)
 
@@ -208,6 +208,19 @@ class ImgFrame():
             raise Exception("merged channel not 1")
 
         return arry
+
+
+    def threshold(self, threshold=0.5, low=0.0, high=1.0, inplace=True):
+        ''' 
+        threshold를 기준으로 low/high값으로 변환.
+        '''
+        arry = np.where(self.arry < threshold, low, high)
+        if inplace:
+            self.arry = arry
+        else:
+            return arry
+
+
 
 
 

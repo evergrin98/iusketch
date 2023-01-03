@@ -300,6 +300,17 @@ class VideoClip():
         return vclip
 
 
+    def threshold(self, threshold=0.5, low=0.0, high=1.0, inplace=True):
+        ''' 
+        threshold를 기준으로 low/high값으로 변환한 VideoClip을 return
+        '''
+        clips = [ clip.threshold(threshold, low, high, inplace=inplace) for clip in self.clips ]
+        if inplace:
+            return self
+        else:
+            return VideoClip(frames=clips)
+
+
 
 
 if __name__ == "__main__":
