@@ -1,3 +1,5 @@
+import os
+
 from bs4 import BeautifulSoup
 from newspaper import Article   # new crawling에 특화됨. newspaper3k module
 import requests
@@ -96,56 +98,59 @@ def file_download(url, to_file):
     url로 부타 파일을 다운받아 to_file로 저장함.
     '''
     urllib.request.urlretrieve(url, to_file)
-    
-    
-if __name__ == "__main__":
-    """ 
-    main함수.
-    """
-    import os
-    #https://www.google.com/search?q=child+drawing+lion+images+no+color&client=ubuntu&hs=RT5&sxsrf=ALiCzsbkTl2FEX-dIYkkld-XjU9tHsdy_A:1668698620494&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjVwovkwrX7AhV7mlYBHfmMApIQ_AUoAXoECAIQAw&biw=1490&bih=758&dpr=1.25
-    # img_url = 'https://www.google.com/search?q=child+drawing+lion+images+no+color&oq=child+drawing+lion+images+no+color&aqs=chrome..69i57j33i160l2.13843j0j15&client=ubuntu&sourceid=chrome&ie=UTF-8'
 
-    # response = request_get(img_url)
-    # data = response.content.decode()
-    
-    base_path = './datas/'
-    res_file = os.path.join(base_path, "crawl.txt")
-    with open(res_file, "r") as f:
-        data = f.read()
 
-    soup = BeautifulSoup(data, 'html.parser')
+def gimg_down_from_file(data_file, save_dir, max_count=3000):
+    '''
+    data_file: 검색 결과 element파일.
+        1. google에서 이미지 검색후, 썸네일이 보여지는 상태에서..
+        2. F12로 source창을 열어서...
+        3. '검색결과' 이어서 나오는 div를 찾아서 element를 복사한다.
+        4. 복사된 element를 파일로 저장.
+
+    save_dir: 크롤링한 이미지를 저장할 폴더.
+    '''
+
+    with open(data_file, "r") as f:
+        tags = f.read()
+
+    soup = BeautifulSoup(tags, 'html.parser')
 
     img_srcs = []
-    for anchor in soup.select('img', limit=3000):
+    for anchor in soup.select('img', limit=max_count):
         src = anchor.get("src")
         if src is not None:
             cls = anchor.get("class")
             if 'rg_i' == cls[0] and 'Q4LuWd' == cls[1]:
                 if src.find('png') != -1:
                     pass
-                    # img_srcs.append(src)
                 elif src.find('jpg') != -1:
                     pass
-                    # img_srcs.append(src)
                 elif src.find('gif') != -1:
                     pass
-                    # img_srcs.append(src)
                 elif src.find('jpeg') != -1:
                     pass
-                    # img_srcs.append(src)
                 else:
                     img_srcs.append(src)
-                    print(src)
-                    # pass
-                # if src.startswith("data:image"):
-                #     img_srcs.append(src)
 
-            # anchor = anchor.find("img")
-            # img_srcs.append(anchor.get("src")+"\n")
+    print("검색결과 이미지 개수:", len(img_srcs))
 
-    print("검색결과 이미지:", len(img_srcs))
     for i, img_src in enumerate(img_srcs):
-        to_file = os.path.join(base_path, 'img%04d.png'%(i))
+        to_file = os.path.join(save_dir, f'img{i:04d}.png')
         file_download(img_src, to_file)
+        print(f"\rdownload img: {i}/{len(img_srcs)}")
 
+    print("crawling done !")
+
+
+
+if __name__ == "__main__":
+    """ 
+    main함수.
+    """
+
+    base_path = './datas/'
+    element_file = os.path.join(base_path, "crawl.txt")
+
+    save_dir = os.path.join(base_path, 'imgs/data_set')
+    gimg_down_from_file(element_file, save_dir)
