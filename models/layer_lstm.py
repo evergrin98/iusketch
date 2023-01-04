@@ -28,13 +28,14 @@ class ConvLstmSeries(keras.layers.Layer):
                             activation="relu",
                         )
                 )
+            self.seq.add(layers.BatchNormalization())
             # if use_bn is True:
             #     # self.seq.add(layers.BatchNormalization())
             # self.seq.add(layers.LayerNormalization())
             # self.seq.add(layers.ReLU())
 
         # 출력의 channel depth를 맞춰주기 위해.
-        self.seq.add(Conv2Plus1D(final_filter_cnt, (3, 3, 3), 1, "same"))
+        #self.seq.add(Conv2Plus1D(final_filter_cnt, (3, 3, 3), 1, "same"))
 
     def call(self, x):
         return self.seq(x)
