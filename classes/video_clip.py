@@ -67,6 +67,19 @@ class VideoClip():
             self.append(imgfrm)
 
 
+    def from_array(self, arry_4d, do_norm=False):
+        '''
+        [frames, height, width, channel]의 4차원 array로 전달.
+        expand : True이면 5차원으로 확장함.
+        '''
+        if arry_4d.ndim != 4:
+            raise Exception("array not 4D")
+
+        for i in range(arry_4d.shape[0]):
+            imgfrm = ImgFrame(img=arry_4d[i], do_norm=do_norm)
+            self.append(imgfrm)
+
+
     def to_array(self, expand=False):
         '''
         [frames, height, width, channel]의 4차원 array로 전달.
@@ -210,15 +223,19 @@ class VideoClip():
         idx_low = 0
         img_cnt = idx_high
 
-        if not include_top:
-            # gif생성시 처음과 끝 프레임 모두 전체 이미지여서 2장을 빼야함;;
-            idx_low = 1
-            idx_high -= 1
-            img_cnt -= 2
+        # gif생성시 처음과 끝 프레임 모두 전체 이미지여서 2장을 빼야함;;
+        idx_low = 1
+        idx_high -= 1
+        img_cnt -= 2
 
         pick_cnt = min(img_cnt, count)
 
         frames = random.choices(population=self.clips[idx_low:idx_high], k=pick_cnt)
+
+        if include_top:
+            # 마지막에 전체 이미지 추가.
+            frames.append(self.clips[0])
+
         return VideoClip(frames=frames)
 
 
@@ -233,10 +250,11 @@ class VideoClip():
         idx_high = len(self.clips)
         idx_low = 0
         img_cnt = idx_high
-        if not include_top:
-            idx_low = 1
-            idx_high -= 1
-            img_cnt -= 2
+
+        # gif생성시 처음과 끝 프레임 모두 전체 이미지여서 2장을 빼야함;;
+        idx_low = 1
+        idx_high -= 1
+        img_cnt -= 2
 
         pick_cnt = min(img_cnt, count)
 
@@ -255,10 +273,14 @@ class VideoClip():
 
         frames = [ self.clips[idx] for idx in idx_list ]
 
+        if include_top:
+            # 마지막에 전체 이미지 추가.
+            frames.append(self.clips[0])
+
         return VideoClip(frames=frames)
 
 
-    def stacked_frames_clip(self, step=1):
+    def stacked_frames_clip(self, step=1, included_label=False):
         '''
         clips에서 그려진 부분을 누적하여 frame생성.
         step==1인경우 0, 0-1, 0-2, 0-3, ... 0-n까지 stack한 frame들로 clip을 생성.
@@ -271,7 +293,12 @@ class VideoClip():
         vclip = VideoClip()
         stacked_frame = None
 
-        for idx, frame in enumerate(self.clips):
+        if included_label:
+            clips = self.clips[:-1]
+        else:
+            clips = self.clips
+
+        for idx, frame in enumerate(clips):
 
             if stacked_frame is None:
                 stacked_frame = frame
@@ -282,6 +309,9 @@ class VideoClip():
 
             if idx % step == 0:
                 vclip.append(img_frame)
+
+        if included_label:
+            vclip.append(self.clips[-1])
 
         return vclip
 
@@ -321,28 +351,37 @@ if __name__ == "__main__":
     import os
     import glob
     from utils.files import dir_path_change
-
+    import matplotlib.pyplot as plt
 
     IMG_LOAD_BASE_PATH = '/home/evergrin/iu/datas/imgs/raw_gif'
     IMG_SAVE_BASE_PATH = '/home/evergrin/iu/datas/imgs/data_set'
+    IMG_PATH = '/home/evergrin/iu/datas/data_set'
 
 
-    gif_list = glob.glob(os.path.join(IMG_LOAD_BASE_PATH, "*.gif"))
+    gif_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
     gif_file = gif_list[0]
 
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
+    
+    vclip.resize(100, 100, True)
+    imgfrm = vclip.clips[0]
+    
+    new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    img = imgfrm.to_image(save_file=new_file)
+    plt.imshow(img, cmap='gray')
+    print('aaa')
 
-    arrys = []
-    arry1 = vclip.to_array()
-    arry2 = vclip.to_array()
-    print(arry1.shape, arry2.shape)
+    # arrys = []
+    # arry1 = vclip.to_array()
+    # arry2 = vclip.to_array()
+    # print(arry1.shape, arry2.shape)
     
-    arrys.append(arry1)
-    arrys.append(arry2)
+    # arrys.append(arry1)
+    # arrys.append(arry2)
     
-    arrys = np.stack(arrys)
-    print(arrys.shape)
+    # arrys = np.stack(arrys)
+    # print(arrys.shape)
 
     # for i in range(1):
     #     vclip = VideoClip()

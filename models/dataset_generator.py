@@ -17,7 +17,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, is_train=False, for_enc=False):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, is_train=False, for_enc=False, for_label=False):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -32,6 +32,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.is_train = is_train
         self.shuffle = True
         self.for_enc = for_enc
+        self.for_label = for_label
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -73,26 +74,41 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
             # raw clip에서 TIME_STEP 개수의 프레임만 가져온다.
             if self.for_enc:
-                clip = clip.random_clips(count=pick_count)
+                clip = clip.random_clips(count=pick_count, include_top=self.for_label)
             else:
-                clip = clip.sequential_clips(count=pick_count, reverse=False)
+                clip = clip.sequential_clips(count=pick_count, reverse=False, include_top=self.for_label)
 
             # 그려진 부분을 누적하여 frame을 생성.
-            clip = clip.stacked_frames_clip(step=leap_step)
+            clip = clip.stacked_frames_clip(step=leap_step, included_label=self.for_label)
 
             # 랜덤하게 augmentation 실행.
             augment = random.choices(population=self.augmentation_list, k=1)[0]
             clip = clip.augmentation(augment)
 
-            # clip은 grayscale이고, augmentation후에 이미지가 흐려질 수 있으므로 threshold적용.
-            clip.threshold(threshold=0.5, low=0.0, high=1.0, inplace=True)
+            # clip은 grayscale이고, augmentation후 이미지가 흐려질 수 있으므로 threshold 0.7정도는 되어야 함.
+            clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
             clips.append(clip.to_array())
 
         clips = np.stack(clips)
 
-        if self.for_enc:
+        if self.for_label:
+            # x, y는 x의 마지막프레임인 전체 이미지를 라벨로 사용.
+            x = clips[:, : -1, :, :, :]
+            y = list()
+            for idx in range(self.batch_size):
+                yy = [ clips[idx][-1] for i in range(x.shape[1]) ]
+                y.append(np.stack(yy))
+
+            y = np.stack(y)
+
+            return x, y
+
+        elif self.for_enc:
+            # x, y가 동일한 이미지 사용.
             return self.create_shifted_frames(clips, offset=0)
+
         else:
+            # x, y가 한 step씩 달라진 이미지 사용.
             return self.create_shifted_frames(clips, offset=1)
 
 
@@ -119,17 +135,31 @@ if __name__ == "__main__":
     """
     import os
     import glob
+    import matplotlib.pyplot as plt
 
-    IMG_PATH = '/home/evergrin/iu/datas/imgs/data_set/'
+    IMG_PATH = '/home/evergrin/iu/datas/data_set'
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, is_train=False)
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, for_enc=False, for_label=True)
 
     it = iter(dgen)
+    x, y = next(it)
 
-    for i in range(10):
-        x, y = next(it)
-        print(x.shape, y.shape)
+    # label = x[:, -1, :, :]
+    # print(label.shape)
+    # label2 = np.expand_dims(label, axis=1)
+    # print(label2.shape)
+    
+    # frm = ImgFrame(img=y[0][-1][:, :, :], do_norm=False)
+    # img = frm.to_image()
+    # plt.imshow(img, cmap='gray')
+    # print(x.shape, y.shape)
+
+    # for i in range(10):
+    #     x, y = next(it)
+        
+    #     frm = ImgFrame(img=x[0][-1][:, :, :], do_norm=False)
+    #     print(x.shape, y.shape)
 
     
