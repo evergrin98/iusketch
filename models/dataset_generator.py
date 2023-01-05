@@ -17,22 +17,22 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, is_train=False, for_enc=False, for_label=False):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step'):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
         img_size: preprocess에 사용할 입력이미지의 크기입니다.
-        is_train: 이 Generator가 학습용인지 테스트용인지 구분합니다.
+        seq_type: random, forward, reverse
+        label_type: 1step, all, same
         '''
         self.imgs = imgs
         self.img_w = imgw
         self.img_h = imgh
         self.time_step = time_step
         self.batch_size = batch_size
-        self.is_train = is_train
         self.shuffle = True
-        self.for_enc = for_enc
-        self.for_label = for_label
+        self.seq_type = seq_type
+        self.label_type = label_type
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -73,13 +73,19 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             clip.resize(self.img_w, self.img_h, inplace=True)
 
             # raw clip에서 TIME_STEP 개수의 프레임만 가져온다.
-            if self.for_enc:
-                clip = clip.random_clips(count=pick_count, include_top=self.for_label)
-            else:
-                clip = clip.sequential_clips(count=pick_count, reverse=False, include_top=self.for_label)
+            use_top_frame = False
+            if self.label_type == 'all':
+                use_top_frame = True
+            
+            if self.seq_type == 'random':
+                clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
+            elif self.seq_type == 'reverse':
+                clip = clip.sequential_clips(count=pick_count, reverse=True, include_top=use_top_frame)
+            else: # 'forward'
+                clip = clip.sequential_clips(count=pick_count, reverse=False, include_top=use_top_frame)
 
             # 그려진 부분을 누적하여 frame을 생성.
-            clip = clip.stacked_frames_clip(step=leap_step, included_label=self.for_label)
+            clip = clip.stacked_frames_clip(step=leap_step, included_label=use_top_frame)
 
             # 랜덤하게 augmentation 실행.
             augment = random.choices(population=self.augmentation_list, k=1)[0]
@@ -91,7 +97,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
         clips = np.stack(clips)
 
-        if self.for_label:
+        if self.label_type == 'all':
             # x, y는 x의 마지막프레임인 전체 이미지를 라벨로 사용.
             x = clips[:, : -1, :, :, :]
             y = list()
@@ -103,11 +109,11 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
             return x, y
 
-        elif self.for_enc:
+        elif self.label_type == 'same':
             # x, y가 동일한 이미지 사용.
             return self.create_shifted_frames(clips, offset=0)
 
-        else:
+        else: # '1step'
             # x, y가 한 step씩 달라진 이미지 사용.
             return self.create_shifted_frames(clips, offset=1)
 
@@ -141,7 +147,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, for_enc=False, for_label=True)
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='random', label_type='all')
 
     it = iter(dgen)
     x, y = next(it)
