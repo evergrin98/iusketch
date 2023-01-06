@@ -1,0 +1,73 @@
+Ubuntu에서 cuda설치하기.
+
+
+    [ 5. tensorflow-gpu ]
+             |
+[ 3. cuda-toolkit ] - [ 4. cudnn ]
+             |
+    [ 2. conda with python ]
+             |
+      [ 1. graphic driver]
+
+
+- driver 및 라이브러리는 nvidia에서 cuda지원 버전을 확인하고 버전에 맞게 설치.
+- driver는 cli/gui 설치가 가능하나, cli를 설치해야 nvidia-smi 명령이 생김.
+- 드라이버를 제외하고는 conda에서 특정 버전 설치 가능.
+- cuda-toolkit은 nvcc -V명령어로 확인.
+- cudnn까지 설치후 PATH 및 LD_LIBRARY_PATH확인 필요.
+
+1. 사용가능한 그래픽 driver 목록 확인
+    ubuntu-drivers devices
+
+1.1 cli 드라이버 설치.(390설치)
+nvidia-driver-470 - distro non-free recommended이나
+호환성을 고려하여 390설치.
+
+자동설치     : sudo ubuntu-drivers autoinstall
+특정버전 설치: sudo apt install nvidia-driver-390
+nvidia-smi로 버전 확인
+
+1.2 gui 드라이버 설치
+nvidia-settings 확인
+
+2. conda install with python.
+conda create -n py27 python=2.7
+
+3. cuda toolkit(자동으로 최신으로 설치됨. 따라서 특정 버전 설치 필요)
+sudo apt-get install nvidia-cuda-toolkit=9.1
+conda install -c anaconda cudatoolkit=9.0
+nvcc -V명령어 동작 확인.
+
+4. cudnn 설치.
+sudo apt install nvidia-cudnn
+conda install -c anaconda cudnn=7.3.1
+설치 버전 확인.
+cat /usr/local/cuda/include/cudnn.h | grep CUDNN_MAJOR -A 2
+
+5. 설치후 path 및 환경설정 확인.
+library path 확인.
+ldconfig -N -v $(sed 's/:/ /' <<< $LD_LIBRARY_PATH) 2>/dev/null | grep libcudnn
+
+cudnn lib path지정.
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/lib/x86_64-linux-gnu/
+
+bin 설치 폴더
+/usr/lib/x86_64-linux-gnu
+
+6. tensorflow 설치 및 동작 확인.
+conda install -c anaconda tensorflow-gpu=1.12
+
+사용가능한 GPU 디바이스 확인
+print(tf.config.list_physical_devices("GPU"))
+
+
+7. tensorRt 설치.
+
+
+cuda_error인 경우 아래와 같이 해서 동작하는지 확인.
+sudo apt install nvidia-modprobe
+
+
+
+
+
