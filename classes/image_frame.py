@@ -115,7 +115,7 @@ class ImgFrame():
             # grayscale은 2dim
             return Image.fromarray(np.squeeze(arry, axis=2), 'L')
         else:
-            raise Exception("invalid image shape")
+            raise Exception("invalid image shape:", arry.shape)
 
 
     def to_image(self, save_file=""):

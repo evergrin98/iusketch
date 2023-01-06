@@ -118,15 +118,18 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
             y = np.stack(y)
 
-            return x, y
-
         elif self.label_type == 'same':
             # x, y가 동일한 이미지 사용.
-            return self.create_shifted_frames(clips, offset=0)
+            x, y = self.create_shifted_frames(clips, offset=0)
 
         else: # '1step'
             # x, y가 한 step씩 달라진 이미지 사용.
-            return self.create_shifted_frames(clips, offset=1)
+            x, y = self.create_shifted_frames(clips, offset=1)
+
+        # TODO : 라벨은 그대로 두고 입력만 augmentation하는 경우... 
+
+        return x, y
+
 
 
     def create_shifted_frames(self, clips, offset=1):
