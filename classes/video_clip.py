@@ -212,6 +212,46 @@ class VideoClip():
         return ImgFrame(imgfrm.merged(), do_norm=False)
 
 
+    def all_clips(self, count=20, include_top=False):
+        '''
+        전체 clips을 count만큼의 그룹으로 나누어 전달.
+        include_top : 첫번째 img는 전체 이미지이므로, 포함할지를 선택함.
+        '''
+        idx_high = len(self.clips)
+        idx_low = 0
+        img_cnt = idx_high
+
+        # gif생성시 처음과 끝 프레임 모두 전체 이미지여서 2장을 빼야함;;
+        idx_low = 1
+        idx_high -= 1
+        img_cnt -= 2
+
+        idx_arry = np.arange(idx_low, idx_high)
+        idxes = np.array_split(idx_arry, count)
+
+        frames = []
+        for arry in idxes:
+
+            clip = [ self.clips[idx] for idx in arry ]
+            stacked_frame = None
+
+            for frame in clip:
+                if stacked_frame is None:
+                    stacked_frame = frame
+                else:
+                    stacked_frame.append_channel(frame)
+
+            img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
+            frames.append(img_frame)
+
+        if include_top:
+            # 마지막에 전체 이미지 추가.
+            frames.append(self.clips[0])
+
+        return VideoClip(frames=frames)
+
+
+
     def random_clips(self, count=20, include_top=False):
         '''
         clips에서 랜덤하게 count만큼 ImgFrame을 뽑아서 clip을 생성함.
@@ -364,12 +404,17 @@ if __name__ == "__main__":
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
     
-    vclip.resize(100, 100, True)
-    imgfrm = vclip.clips[0]
-    
+    newclip = vclip.all_clips(count=10)
+
     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
-    img = imgfrm.to_image(save_file=new_file)
-    plt.imshow(img, cmap='gray')
+    newclip.make_gif(new_file)
+
+    stacked_clip = newclip.stacked_frames_clip(step=1)
+    new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    stacked_clip.make_gif(new_file)
+        
+    # img = imgfrm.to_image(save_file=new_file)
+    # plt.imshow(img, cmap='gray')
     print('aaa')
 
     # arrys = []
