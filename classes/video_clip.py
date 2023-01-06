@@ -7,7 +7,7 @@ import imageio as iio
 # from PIL.PngImagePlugin import PngImageFile
 
 from classes.image_frame import ImgFrame
-
+from albumentations import  ReplayCompose
 
 
 
@@ -364,8 +364,13 @@ class VideoClip():
             return self
 
         vclip = VideoClip()
+
+        # augment를 한번 실행하여 replay용 데이터를 얻는다.
+        data = augmentator(image=self.clips[0].arry)
+
         for img_frm in self.clips:
-            augmentated = augmentator(image=img_frm.arry)
+            # replay용 데이터를 이용하여 replay하여 동일한 augment를 실행한다.
+            augmentated = ReplayCompose.replay(data['replay'], image=img_frm.arry)
             vclip.append(ImgFrame(img=augmentated["image"]))
         return vclip
 

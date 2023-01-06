@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from albumentations import  Compose, HorizontalFlip, CropAndPad
+from albumentations import  ReplayCompose, Compose, HorizontalFlip, CropAndPad, SafeRotate
 
 
 
@@ -36,9 +36,13 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
-        self.augmentation_list.append(Compose([HorizontalFlip(p=1.0)])) # 좌우대칭
-        self.augmentation_list.append(Compose([CropAndPad(
-            percent=(-0.2, 0.2), p=1.0, pad_mode=cv2.BORDER_CONSTANT, pad_cval=1.0, keep_size=True)])) # crop and pad(size same)
+        self.augmentation_list.append(ReplayCompose([HorizontalFlip(p=1.0)])) # 좌우대칭
+        self.augmentation_list.append(ReplayCompose([CropAndPad(
+                                        percent=(-0.2, 0.2), p=1.0, pad_mode=cv2.BORDER_CONSTANT, 
+                                        pad_cval=1.0, keep_size=True)])) # crop and pad(size same)
+        self.augmentation_list.append(ReplayCompose([SafeRotate(
+                                        limit=[-45, 45], interpolation=1, border_mode=cv2.BORDER_CONSTANT, 
+                                        value=1.0, mask_value=None, always_apply=False, p=1.0)])) # saferotate(size same)
 
         # self.on_epoch_end()
 
@@ -94,7 +98,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             # 그려진 부분을 누적하여 frame을 생성.
             clip = clip.stacked_frames_clip(step=leap_step, included_label=use_top_frame)
 
-            # 랜덤하게 augmentation 실행.
+            # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
             augment = random.choices(population=self.augmentation_list, k=1)[0]
             clip = clip.augmentation(augment)
 
@@ -149,6 +153,7 @@ if __name__ == "__main__":
     import os
     import glob
     import matplotlib.pyplot as plt
+    from classes.image_frame import ImgFrame
 
     IMG_PATH = '/home/evergrin/iu/datas/data_set'
 
@@ -159,6 +164,13 @@ if __name__ == "__main__":
     it = iter(dgen)
     x, y = next(it)
 
+    frm = ImgFrame(img=x[0][-1][:, :, :], do_norm=False)
+    img = frm.to_image()
+    plt.imshow(img, cmap='gray')
+
+    frm = ImgFrame(img=y[0][-1][:, :, :], do_norm=False)
+    img = frm.to_image()
+    plt.imshow(img, cmap='gray')
     # label = x[:, -1, :, :]
     # print(label.shape)
     # label2 = np.expand_dims(label, axis=1)
