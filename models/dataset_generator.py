@@ -92,7 +92,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             clip = clip.augmentation(augment)
 
             # clip은 grayscale이고, augmentation후 이미지가 흐려질 수 있으므로 threshold 0.7정도는 되어야 함.
-            clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
+            # clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
             clips.append(clip.to_array())
 
         clips = np.stack(clips)
