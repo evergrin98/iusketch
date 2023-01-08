@@ -17,7 +17,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step'):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -33,6 +33,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.shuffle = True
         self.seq_type = seq_type
         self.label_type = label_type
+        self.stacked = stacked
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -72,7 +73,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             max_leap_step = frm_cnt // (self.time_step + 1)
 
             leap_step = random.randint(1, max_leap_step)
-            if self.seq_type == 'all':
+            if self.seq_type == 'all' or self.seq_type == 'arandom':
                 leap_step = 1
 
             pick_count = leap_step * (self.time_step + 1)
@@ -87,7 +88,10 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 use_top_frame = True
             
             if self.seq_type == 'all':
-                clip = clip.all_clips(count=self.time_step + 1, include_top=use_top_frame)
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame)
+            elif self.seq_type == 'arandom':
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame)
+                clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
             elif self.seq_type == 'random':
                 clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
             elif self.seq_type == 'reverse':
@@ -96,7 +100,8 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 clip = clip.sequential_clips(count=pick_count, reverse=False, include_top=use_top_frame)
 
             # 그려진 부분을 누적하여 frame을 생성.
-            clip = clip.stacked_frames_clip(step=leap_step, included_label=use_top_frame)
+            if self.stacked :
+                clip = clip.stacked_frames_clip(step=leap_step, included_label=use_top_frame)
 
             # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
             augment = random.choices(population=self.augmentation_list, k=1)[0]
