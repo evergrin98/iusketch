@@ -212,7 +212,7 @@ class VideoClip():
         return ImgFrame(imgfrm.merged(), do_norm=False)
 
 
-    def all_clips(self, count=20, include_top=False, shuffle='none', overlap=False):
+    def all_clips(self, count=20, include_top=False, use_all=False, shuffle='none', overlap=False):
         '''
         전체 clips을 count만큼의 그룹으로 나누어 전달.
         include_top : 첫번째 img는 전체 이미지이므로, 포함할지를 선택함.
@@ -222,13 +222,17 @@ class VideoClip():
         img_cnt = idx_high
 
         # gif생성시 처음과 끝 프레임 모두 전체 이미지여서 2장을 빼야함;;
-        idx_low = 1
-        idx_high -= 1
-        img_cnt -= 2
+        if not use_all:
+            idx_low = 1
+            idx_high -= 1
+            img_cnt -= 2
         
         pick_cnt = count
         if overlap:
             pick_cnt = count + 1
+            
+        if img_cnt < pick_cnt:
+            raise Exception("count not match")
 
         idx_arry = np.arange(idx_low, idx_high)
         idxes = np.array_split(idx_arry, pick_cnt)
