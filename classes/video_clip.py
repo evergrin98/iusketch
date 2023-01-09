@@ -212,7 +212,7 @@ class VideoClip():
         return ImgFrame(imgfrm.merged(), do_norm=False)
 
 
-    def all_clips(self, count=20, include_top=False, shuffle='none'):
+    def all_clips(self, count=20, include_top=False, shuffle='none', overlap=False):
         '''
         전체 clips을 count만큼의 그룹으로 나누어 전달.
         include_top : 첫번째 img는 전체 이미지이므로, 포함할지를 선택함.
@@ -225,9 +225,13 @@ class VideoClip():
         idx_low = 1
         idx_high -= 1
         img_cnt -= 2
+        
+        pick_cnt = count
+        if overlap:
+            pick_cnt = count + 1
 
         idx_arry = np.arange(idx_low, idx_high)
-        idxes = np.array_split(idx_arry, count)
+        idxes = np.array_split(idx_arry, pick_cnt)
 
         frames = []
         for arry in idxes:
@@ -259,12 +263,23 @@ class VideoClip():
             frames = [ frames[idx] for idx in idx_list ]
 
         # else: # 'none'
+        
+        overlaps = []
+        if overlap:
+            for idx in range(len(frames) - 1):
+                frame = frames[idx]
+                frame.append_channel(frames[idx+1])
+                img_frame = ImgFrame(frame.merged(), do_norm=False)
+                overlaps.append(img_frame)
+        else:
+            overlaps = frames
+            
 
         if include_top:
             # 마지막에 전체 이미지 추가.
-            frames.append(self.clips[0])
+            overlaps.append(self.clips[0])
 
-        return VideoClip(frames=frames)
+        return VideoClip(frames=overlaps)
 
 
 

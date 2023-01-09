@@ -17,7 +17,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -34,6 +34,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.seq_type = seq_type
         self.label_type = label_type
         self.stacked = stacked
+        self.overlap = overlap
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -88,11 +89,11 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 use_top_frame = True
             
             if self.seq_type == 'all':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none')
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none', overlap=self.overlap)
             elif self.seq_type == 'arandom':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random')
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random', overlap=self.overlap)
             elif self.seq_type == 'aforward':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward')
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward', overlap=self.overlap)
             elif self.seq_type == 'random':
                 clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
             elif self.seq_type == 'reverse':
@@ -168,7 +169,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='random', label_type='all')
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='random', label_type='all', stakced=False, overlap=True)
 
     it = iter(dgen)
     x, y = next(it)
