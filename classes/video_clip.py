@@ -212,7 +212,7 @@ class VideoClip():
         return ImgFrame(imgfrm.merged(), do_norm=False)
 
 
-    def all_clips(self, count=20, include_top=False):
+    def all_clips(self, count=20, include_top=False, shuffle='none'):
         '''
         전체 clips을 count만큼의 그룹으로 나누어 전달.
         include_top : 첫번째 img는 전체 이미지이므로, 포함할지를 선택함.
@@ -243,6 +243,22 @@ class VideoClip():
 
             img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
             frames.append(img_frame)
+
+        if shuffle == 'random':
+            frames = random.choices(population=frames, k=len(frames))
+        elif shuffle == 'forward':
+            # clip index를 두번 반복해서 roundQueue처럼 동작.
+            idx_list = [ idx for idx in range(0, len(frames))]
+            idx_list.extend(idx_list)
+
+            # random start idx
+            start_idx = random.randrange(0, len(frames))
+
+            idx_list = idx_list[start_idx:start_idx + len(frames)]
+
+            frames = [ frames[idx] for idx in idx_list ]
+
+        # else: # 'none'
 
         if include_top:
             # 마지막에 전체 이미지 추가.

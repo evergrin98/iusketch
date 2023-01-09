@@ -73,7 +73,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             max_leap_step = frm_cnt // (self.time_step + 1)
 
             leap_step = random.randint(1, max_leap_step)
-            if self.seq_type == 'all' or self.seq_type == 'arandom':
+            if self.seq_type == 'all' or self.seq_type == 'arandom' or self.seq_type == 'aforward':
                 leap_step = 1
 
             pick_count = leap_step * (self.time_step + 1)
@@ -88,10 +88,11 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 use_top_frame = True
             
             if self.seq_type == 'all':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame)
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none')
             elif self.seq_type == 'arandom':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame)
-                clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random')
+            elif self.seq_type == 'aforward':
+                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward')
             elif self.seq_type == 'random':
                 clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
             elif self.seq_type == 'reverse':
