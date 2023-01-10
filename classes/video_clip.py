@@ -390,6 +390,36 @@ class VideoClip():
 
         return vclip
 
+    def minus_from(self, imgfrm, included_label=False, stack=False):
+        '''
+        imgfrm에서 clip의 각 frame을 뺀 frame들로
+        clip을생성하여 return함.
+        흰바탕에 검은색 0-1 norm된 이미지만 지원.
+        '''
+        if included_label:
+            clips = self.clips[:-1]
+        else:
+            clips = self.clips
+
+        vclip = VideoClip()
+        stacked_frame = None
+        for idx, frame in enumerate(clips):
+
+            if stacked_frame is None:
+                stacked_frame = frame
+            else:
+                stacked_frame.append_channel(frame)
+
+            if stack:
+                stacked_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
+                minus_frame = imgfrm.minus_frame(stacked_frame)
+            else:
+                minus_frame = imgfrm.minus_frame(frame)
+            
+            vclip.append(minus_frame)
+
+        return vclip
+
 
     def augmentation(self, augmentator=None):
         ''' 
@@ -444,14 +474,24 @@ if __name__ == "__main__":
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
     
-    newclip = vclip.all_clips(count=10)
+    newclip = vclip.all_clips(count=5, include_top=True)
 
     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
     newclip.make_gif(new_file)
 
-    stacked_clip = newclip.stacked_frames_clip(step=1)
+    # stacked_clip = newclip.stacked_frames_clip(step=1)
+    label_frm = newclip.clips[-1]
+    new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
+    label_frm.to_image(save_file=new_file)
+    
+    minclip = newclip.minus_from(label_frm, stack=True)
+    
+    for cc in minclip.clips:
+        new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
+        cc.to_image(save_file=new_file)
+        
     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
-    stacked_clip.make_gif(new_file)
+    minclip.make_gif(new_file)
         
     # img = imgfrm.to_image(save_file=new_file)
     # plt.imshow(img, cmap='gray')

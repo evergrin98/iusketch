@@ -221,7 +221,20 @@ class ImgFrame():
             return arry
 
 
+    def minus_frame(self, imgfrm):
+        '''
+        흑백(배경 흰색), 0-1norm된 데이터에서...
+        현재 이미지에서 imgfrm이미지를 뺀 이미지를 생성함.
+        '''
+        if not isinstance(imgfrm, ImgFrame):
+            raise Exception("img is not ImgFrame")
 
+        if self.arry.shape != imgfrm.arry.shape:
+            raise Exception("img frame size not correct")
+
+        arry = np.where(imgfrm.arry < 1.0, 1.0, self.arry)
+
+        return ImgFrame(arry)
 
 
 

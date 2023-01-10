@@ -74,7 +74,8 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             max_leap_step = frm_cnt // (self.time_step + 1)
 
             leap_step = random.randint(1, max_leap_step)
-            if self.seq_type == 'all' or self.seq_type == 'arandom' or self.seq_type == 'aforward':
+            if self.seq_type == 'all' or self.seq_type == 'arandom' \
+                or self.seq_type == 'aforward' or self.seq_type == 'rest':
                 leap_step = 1
 
             pick_count = leap_step * (self.time_step + 1)
@@ -90,6 +91,8 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             
             if self.seq_type == 'all':
                 clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none', overlap=self.overlap)
+            elif self.seq_type == 'rest':
+                clip = clip.all_clips(count=pick_count, include_top=True, shuffle='random', overlap=self.overlap)
             elif self.seq_type == 'arandom':
                 clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random', overlap=self.overlap)
             elif self.seq_type == 'aforward':
@@ -111,32 +114,58 @@ class DataSetGenerator(tf.keras.utils.Sequence):
 
             # clip은 grayscale이고, augmentation후 이미지가 흐려질 수 있으므로 threshold 0.7정도는 되어야 함.
             # clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
-            clips.append(clip.to_array())
+            clips.append(clip)
 
-        clips = np.stack(clips)
+        clips_arry = []
+        for clip in clips:
+            clips_arry.append(clip.to_array())
+
+        clips_arry = np.stack(clips_arry)
 
         if self.label_type == 'all':
             # x, y는 x의 마지막프레임인 전체 이미지를 라벨로 사용.
-            x = clips[:, : -1, :, :, :]
+            x = clips_arry[:, : -1, :, :, :]
             y = list()
             for idx in range(self.batch_size):
-                yy = [ clips[idx][-1] for i in range(x.shape[1]) ]
+                yy = [ clips_arry[idx][-1] for i in range(x.shape[1]) ]
                 y.append(np.stack(yy))
 
             y = np.stack(y)
 
         elif self.label_type == 'same':
             # x, y가 동일한 이미지 사용.
-            x, y = self.create_shifted_frames(clips, offset=0)
+            x, y = self.create_shifted_frames(clips_arry, offset=0)
+        
+        elif self.label_type == 'rest':
+            # x는 random.,y 는 전체이미지에서 미완성 부분
+            x, y = self.create_rest_frames(clips)
+            
+            return x, y
 
         else: # '1step'
             # x, y가 한 step씩 달라진 이미지 사용.
-            x, y = self.create_shifted_frames(clips, offset=1)
+            x, y = self.create_shifted_frames(clips_arry, offset=1)
 
         # TODO : 라벨은 그대로 두고 입력만 augmentation하는 경우... 
 
         return x, y
 
+
+
+    def create_rest_frames(self, clips):
+        ''' label에서 x를 제외한 부분을 y로 생성함.. '''
+
+        xes = []
+        yes = []
+
+        for clip in clips:
+            label = clip.clips[-1]
+            y_clip = clip.minus_from(label, stack=True, included_label=True)
+            vclip = VideoClip(frames=clip.clips[0:-1])
+            xes.append(vclip.to_array())
+            yes.append(y_clip.to_array())
+
+        return np.stack(xes), np.stack(yes)
 
 
     def create_shifted_frames(self, clips, offset=1):
@@ -169,7 +198,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='random', label_type='all', stakced=False, overlap=True)
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='rest', label_type='rest', stacked=False, overlap=True)
 
     it = iter(dgen)
     x, y = next(it)
