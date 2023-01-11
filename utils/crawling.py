@@ -143,14 +143,51 @@ def gimg_down_from_file(data_file, save_dir, max_count=3000):
     print("crawling done !")
 
 
+def yimg_down_from_file(data_file, save_dir, max_count=3000):
+    '''
+    data_file: 검색 결과 element파일.
+        1. yahoo에서 이미지 검색후, 썸네일이 보여지는 상태에서..
+        2. F12로 source창을 열어서... 'sres-cntr' 키워드 검색
+        3. <section id="results" class="results justify".. > 아래에 있는
+        4. <div class='sres-cntr'..> 엘리먼트 선택한후 복사.
+        4. 복사된 element를 파일로 저장.
+
+    save_dir: 크롤링한 이미지를 저장할 폴더.
+    '''
+
+    with open(data_file, "r") as f:
+        tags = f.read()
+
+    soup = BeautifulSoup(tags, 'html.parser')
+
+    img_srcs = []
+    for anchor in soup.select('img', limit=max_count):
+        src = anchor.get("src")
+        if src is not None:
+            if src.endswith('300'):
+                img_srcs.append(src)
+
+    print("검색결과 이미지 개수:", len(img_srcs))
+
+    for i, img_src in enumerate(img_srcs):
+        to_file = os.path.join(save_dir, f'img{i:04d}.png')
+        file_download(img_src, to_file)
+        print(f"\rdownload img: {i}/{len(img_srcs)} {img_src}")
+
+    print("crawling done !")
+
+
+
 
 if __name__ == "__main__":
     """ 
     main함수.
     """
 
-    base_path = './datas/'
-    element_file = os.path.join(base_path, "crawl.txt")
+    base_path = '/home/evergrin/iu/datas'
+    element_file = os.path.join(base_path, "crawl_y.txt")
 
-    save_dir = os.path.join(base_path, 'imgs/data_set')
+    save_dir = os.path.join(base_path, 'imgs/yahoo')
+
     gimg_down_from_file(element_file, save_dir)
+    #yimg_down_from_file(element_file, save_dir)
