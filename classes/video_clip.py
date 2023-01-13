@@ -287,7 +287,7 @@ class VideoClip():
 
 
 
-    def random_clips(self, count=20, include_top=False):
+    def random_clips(self, count=20, step=1, include_top=False):
         '''
         clips에서 랜덤하게 count만큼 ImgFrame을 뽑아서 clip을 생성함.
         include_top : 첫번째 img는 전체 이미지이므로, 포함할지를 선택함.
@@ -305,7 +305,23 @@ class VideoClip():
 
         pick_cnt = min(img_cnt, count)
 
-        frames = random.choices(population=self.clips[idx_low:idx_high], k=pick_cnt)
+        temp_frames = random.choices(population=self.clips[idx_low:idx_high], k=pick_cnt)
+
+        frames = []
+        stacked_frame = None
+
+        for i, frame in enumerate(temp_frames):
+
+            if stacked_frame is None:
+                stacked_frame = frame
+            else:
+                stacked_frame.append_channel(frame)
+
+            img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
+
+            if i % step == 0:
+                frames.append(img_frame)
+                stacked_frame = None
 
         if include_top:
             # 마지막에 전체 이미지 추가.
@@ -314,7 +330,7 @@ class VideoClip():
         return VideoClip(frames=frames)
 
 
-    def sequential_clips(self, start_idx=None, count=20, include_top=False, reverse=False):
+    def sequential_clips(self, start_idx=None, count=20, step=1, include_top=False, reverse=False):
         '''
         clips에서 start_idx부터 순서대로 count만큼 ImgFrame을 뽑아서 clip을 생성함.
         start_idx가 None이 아니면 start_idx사용, None이면 random값 사용.
@@ -346,7 +362,23 @@ class VideoClip():
         if reverse:
             idx_list.reverse()
 
-        frames = [ self.clips[idx] for idx in idx_list ]
+        temp_frames = [ self.clips[idx] for idx in idx_list ]
+
+        frames = []
+        stacked_frame = None
+
+        for idx, frame in enumerate(temp_frames):
+
+            if stacked_frame is None:
+                stacked_frame = frame
+            else:
+                stacked_frame.append_channel(frame)
+
+            img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
+
+            if idx % step == 0:
+                frames.append(img_frame)
+                stacked_frame = None
 
         if include_top:
             # 마지막에 전체 이미지 추가.

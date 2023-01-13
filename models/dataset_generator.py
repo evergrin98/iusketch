@@ -98,15 +98,15 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             elif self.seq_type == 'aforward':
                 clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward', overlap=self.overlap)
             elif self.seq_type == 'random':
-                clip = clip.random_clips(count=pick_count, include_top=use_top_frame)
+                clip = clip.random_clips(count=pick_count, step=leap_step, include_top=use_top_frame)
             elif self.seq_type == 'reverse':
-                clip = clip.sequential_clips(count=pick_count, reverse=True, include_top=use_top_frame)
+                clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=True, include_top=use_top_frame)
             else: # 'forward'
-                clip = clip.sequential_clips(count=pick_count, reverse=False, include_top=use_top_frame)
+                clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=False, include_top=use_top_frame)
 
             # 그려진 부분을 누적하여 frame을 생성.
             if self.stacked :
-                clip = clip.stacked_frames_clip(step=leap_step, included_label=use_top_frame)
+                clip = clip.stacked_frames_clip(step=1, included_label=use_top_frame)
 
             # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
             augment = random.choices(population=self.augmentation_list, k=1)[0]
@@ -198,7 +198,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='rest', label_type='rest', stacked=False, overlap=True)
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='forward', label_type='1step', stacked=False, overlap=False)
 
     it = iter(dgen)
     x, y = next(it)
