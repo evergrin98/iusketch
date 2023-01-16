@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
-from albumentations import  ReplayCompose, Compose, HorizontalFlip, CropAndPad, SafeRotate
+from albumentations import  ReplayCompose, Compose, HorizontalFlip, CropAndPad, SafeRotate, ShiftScaleRotate, Affine
 
 
 
@@ -17,7 +17,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False, aug_prob=0.4):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -46,6 +46,17 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                                         limit=[-45, 45], interpolation=1, border_mode=cv2.BORDER_CONSTANT, 
                                         value=1.0, mask_value=None, always_apply=False, p=1.0)])) # saferotate(size same)
 
+        self.augmentation = ReplayCompose([
+                                            HorizontalFlip(p=aug_prob), 
+                                            CropAndPad( percent=(-0.2, 0.2), p=aug_prob,
+                                               pad_mode=cv2.BORDER_CONSTANT, pad_cval=1.0, keep_size=True),
+                                            SafeRotate(limit=[-45, 45], interpolation=1, border_mode=cv2.BORDER_CONSTANT, 
+                                                      value=1.0, mask_value=None, always_apply=False, p=aug_prob),
+                                            ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=0, p=aug_prob, 
+                                                             value=1.0, border_mode=cv2.BORDER_CONSTANT),
+                                            # Affine(translate_percent=0.2, p=aug_prob, cval=1.0, mode=cv2.BORDER_CONSTANT),
+                                            Affine(translate_percent=None, shear=15, p=aug_prob, cval=1.0, mode=cv2.BORDER_CONSTANT),
+                                           ])
         # self.on_epoch_end()
 
 
@@ -109,8 +120,8 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 clip = clip.stacked_frames_clip(step=1, included_label=use_top_frame)
 
             # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
-            augment = random.choices(population=self.augmentation_list, k=1)[0]
-            clip = clip.augmentation(augment)
+            # augment = random.choices(population=self.augmentation_list, k=1)[0]
+            clip = clip.augmentation(self.augmentation)
 
             # clip은 grayscale이고, augmentation후 이미지가 흐려질 수 있으므로 threshold 0.7정도는 되어야 함.
             # clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
@@ -198,7 +209,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='forward', label_type='1step', stacked=False, overlap=False)
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='all', label_type='1step', stacked=False, overlap=False)
 
     it = iter(dgen)
     x, y = next(it)
