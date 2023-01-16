@@ -3,7 +3,7 @@ import glob
 import tkinter as tk
 from tkinter import filedialog
 
-import config_env as cfg
+import apps.config_env as cfg
 
 from utils.guis import BaseGuiClass, unit_x, unit_y
 from utils.files import dir_path_change

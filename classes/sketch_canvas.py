@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
 
-import config_env as cfg
+import apps.config_env as cfg
 
 from PIL import Image
 

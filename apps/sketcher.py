@@ -1,6 +1,6 @@
 import tkinter as tk
 
-import config_env as cfg
+import apps.config_env as cfg
 
 from utils.guis import BaseGuiClass, unit_x, unit_y
 
