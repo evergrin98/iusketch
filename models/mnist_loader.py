@@ -38,7 +38,6 @@ class MnistLoader(tf.keras.utils.Sequence):
             
             clips = []
             for datas in MnistLoader.data_sets:
-                print('datas shape:', datas.shape)
                 clip = VideoClip()
                 clip.from_array(datas, do_norm=False)
                 clip.resize(img_w, img_h, inplace=True)
