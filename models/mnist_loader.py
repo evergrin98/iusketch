@@ -1,3 +1,5 @@
+from classes.video_clip import VideoClip
+
 import random
 import numpy as np
 import tensorflow as tf
@@ -21,7 +23,7 @@ class MnistLoader(tf.keras.utils.Sequence):
     val_index = None
 
     @staticmethod
-    def load_dataset(max_count=1000, step=8):
+    def load_dataset(max_count=1000, step=8, img_w=64, img_h=64):
 
         if MnistLoader.data_sets is None:
             fpath = keras.utils.get_file(
@@ -33,6 +35,16 @@ class MnistLoader(tf.keras.utils.Sequence):
             MnistLoader.data_sets = np.swapaxes(MnistLoader.data_sets, 0, 1)
             MnistLoader.data_sets = np.expand_dims(MnistLoader.data_sets, axis=-1)
             MnistLoader.data_sets = MnistLoader.data_sets[:max_count, : step+1, ...]
+            
+            clips = []
+            for datas in MnistLoader.data_sets:
+                print('datas shape:', datas.shape)
+                clip = VideoClip()
+                clip.from_array(datas, do_norm=False)
+                clip.resize(img_w, img_h, inplace=True)
+                clips.append(clip.to_array())
+                
+            MnistLoader.data_sets = np.stack(clips)
 
             MnistLoader.indexes = np.arange(MnistLoader.data_sets.shape[0])
             np.random.shuffle(MnistLoader.indexes)
@@ -57,7 +69,7 @@ class MnistLoader(tf.keras.utils.Sequence):
         batch_size: batch_size입니다.
         img_size: preprocess에 사용할 입력이미지의 크기입니다.
         '''
-        self.load_dataset(max_count=max_count, step=time_step)
+        self.load_dataset(max_count=max_count, step=time_step, img_w=imgw, img_h=imgh)
 
         self.is_train = is_train
 
@@ -109,7 +121,7 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = MnistLoader(is_train=True, imgw=64, imgh=64, 
+    dgen = MnistLoader(is_train=True, imgw=32, imgh=32, 
             time_step=5, batch_size=2, max_count=1000)
 
     it = iter(dgen)
