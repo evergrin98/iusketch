@@ -1,5 +1,8 @@
 import copy
 import numpy as np
+import math
+import cv2
+
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 
@@ -237,13 +240,114 @@ class ImgFrame():
         return ImgFrame(arry)
 
 
+    def out_box(self):
+        '''
+        cv2 contour은 흰색의 물체를 검출.
+        프레임의 전체 이미지 외곽 박스 좌표를 리턴함.
+        '''
+        img = self.valid_image()
+        imgary = np.array(img)
+        # imgray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # imgray = np.invert(imgray)
+        # print(imgary.shape)
+
+        ret,thresh = cv2.threshold(src=imgary, thresh=200, maxval=255, type=0)
+        thresh = cv2.bitwise_not(thresh)
+
+        contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        sxs = []
+        sys = []
+        exs = []
+        eys = []
+
+        for cntur in contours:
+            x,y,w,h = cv2.boundingRect(cntur)
+            sxs.append(x)
+            sys.append(y)
+            exs.append(x+w)
+            eys.append(y+h)
+
+        sxs = np.array(sxs)
+        sys = np.array(sys)
+        exs = np.array(exs)
+        eys = np.array(eys)
+
+        sx,sy,ex,ey = np.min(sxs), np.min(sys), np.max(exs), np.max(eys)
+        # print(sx,sy,ex,ey)
+
+        return sx, sy, ex, ey
+
+
+    def splitted_frames(self, dx=100, dy=100):
+        '''
+        외곽 박스 크기가 dx, dy보다 크면 split하여 
+        동일한 크기의 frame 리스트로 생성하여 리턴함.
+        '''
+        sx, sy, ex, ey = self.out_box()
+        w = ex-sx
+        h = ey-sy
+        x_cnt = max(1, math.ceil(w / dx ))
+        y_cnt = max(1, math.ceil(h / dy ))
+
+        print(f"frame {w}x{h}, split x:{x_cnt}, y:{y_cnt}")
+
+        if x_cnt == 1 and y_cnt == 1:
+            return [self]
+
+        x_ary = np.arange(sx, ex+1)
+        xes = np.array_split(x_ary, x_cnt)
+        y_ary = np.arange(sy, ey+1)
+        yes = np.array_split(y_ary, y_cnt)
+
+        xminmax = [ [ary[0], ary[-1] + 1] for ary in xes]
+        yminmax = [ [ary[0], ary[-1] + 1] for ary in yes]
+
+        frames = []
+        for xmin, xmax in xminmax:
+            for ymin, ymax in yminmax:
+                emptyary = np.ones_like(self.arry)
+                emptyary[ymin:ymax, xmin:xmax, ...] = self.arry[ymin:ymax, xmin:xmax, ...]
+                if np.min(emptyary) < 0.9:
+                    frames.append(ImgFrame(emptyary, do_norm=False))
+                else:
+                    print('split empty frame skip')
+
+        return frames
+
+
+
+
+
 
 
 if __name__ == "__main__":
     """ 
     test main함수.
     """
+    import matplotlib.pyplot as plt
     
+
+    file_path = '/home/evergrin/iu/datas/imgs/yahoo/img0060.png'
+
+    imgfrm = ImgFrame(img=file_path, grayscale=True)
+    # sx, sy, ex, ey = imgfrm.out_box()
+
+    # img = imgfrm.to_image()
+    # imgary = np.array(img)
+    # emptyary = np.ones_like(imgary) * 255
+    # w = (ex - sx) // 2
+    # h = (ey - sy) // 2
+    # emptyary[sy:sy+h, sx:sx+w, ...] = imgary[sy:sy+h, sx:sx+w, ...]
+
+    # img = cv2.rectangle(emptyary, (sx,sy), (ex,ey), (0, 0, 255), 2)
+    # plt.imshow(emptyary, cmap='gray')
+    
+    # print(sx, sy, ex, ey)
+    imgfrms = imgfrm.splitted_frames(dx=50, dy=50)
+    for imf in imgfrms:
+        img = imf.to_image()
+        plt.imshow(img, cmap='gray')
+
     arry1 = np.zeros((3, 4, 1))
     arry2 = np.ones((3, 4, 2))
     arry3 = np.dstack((arry1, arry2))

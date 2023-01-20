@@ -234,7 +234,7 @@ class VideoClip():
         if img_cnt < pick_cnt:
             raise Exception("count not match")
 
-        idx_arry = np.arange(idx_low, idx_high)
+        idx_arry = np.arange(idx_low, idx_high + 1)
         idxes = np.array_split(idx_arry, pick_cnt)
 
         frames = []
@@ -483,6 +483,20 @@ class VideoClip():
             return VideoClip(frames=clips)
 
 
+    def split(self, dx=100, dy=100, include_top=False):
+        '''
+        외곽 박스 크기가 dx, dy보다 크면 split하여 
+        동일한 크기의 frame 리스트로 생성하여 리턴함.
+        '''
+        clips = self.clips
+        if not include_top:
+            clips = self.clips[1:]
+
+        frames = []
+        for img_frm in clips:
+            frames.extend(img_frm.splitted_frames(dx, dy))
+
+        return VideoClip(frames=frames)
 
 
 if __name__ == "__main__":
@@ -506,24 +520,26 @@ if __name__ == "__main__":
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
     
-    newclip = vclip.all_clips(count=5, include_top=True)
+    # newclip = vclip.all_clips(count=5, include_top=True)
+    
+    newclip = vclip.split(dx=50,dy=50, include_top=False)
 
     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
     newclip.make_gif(new_file)
 
     # stacked_clip = newclip.stacked_frames_clip(step=1)
-    label_frm = newclip.clips[-1]
-    new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
-    label_frm.to_image(save_file=new_file)
+    # label_frm = newclip.clips[-1]
+    # new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
+    # label_frm.to_image(save_file=new_file)
     
-    minclip = newclip.minus_from(label_frm, stack=True)
+    # minclip = newclip.minus_from(label_frm, stack=True)
     
-    for cc in minclip.clips:
-        new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
-        cc.to_image(save_file=new_file)
+    # for cc in minclip.clips:
+    #     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "png")
+    #     cc.to_image(save_file=new_file)
         
-    new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
-    minclip.make_gif(new_file)
+    # new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    # minclip.make_gif(new_file)
         
     # img = imgfrm.to_image(save_file=new_file)
     # plt.imshow(img, cmap='gray')
