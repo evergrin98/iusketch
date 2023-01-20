@@ -36,14 +36,15 @@ class MnistLoader(tf.keras.utils.Sequence):
             MnistLoader.data_sets = np.expand_dims(MnistLoader.data_sets, axis=-1)
             MnistLoader.data_sets = MnistLoader.data_sets[:max_count, : step+1, ...]
             
-            clips = []
-            for datas in MnistLoader.data_sets:
-                clip = VideoClip()
-                clip.from_array(datas, do_norm=False)
-                clip.resize(img_w, img_h, inplace=True)
-                clips.append(clip.to_array())
-                
-            MnistLoader.data_sets = np.stack(clips)
+            if img_w != 64 or img_h != 64:
+                clips = []
+                for datas in MnistLoader.data_sets:
+                    clip = VideoClip()
+                    clip.from_array(datas, do_norm=False)
+                    clip.resize(img_w, img_h, inplace=True)
+                    clips.append(clip.to_array())
+                    
+                MnistLoader.data_sets = np.stack(clips)
 
             MnistLoader.indexes = np.arange(MnistLoader.data_sets.shape[0])
             np.random.shuffle(MnistLoader.indexes)

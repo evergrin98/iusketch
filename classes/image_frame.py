@@ -163,7 +163,7 @@ class ImgFrame():
         channel이 4보다 클때는 지원안됨..
         '''
         img = self.valid_image()
-        img = img.resize((width, height))
+        img = img.resize((width, height), Image.LANCZOS)
 
         arry = self.valid_arry(np.asarray(img, ImgFrame.ary_dtype))
 
