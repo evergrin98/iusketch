@@ -255,6 +255,12 @@ class ImgFrame():
         thresh = cv2.bitwise_not(thresh)
 
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        if len(contours) == 0:
+            print("no out line!!!!")
+            # self.to_image(save_file='/home/evergrin/iu/datas/imgs/data_set/error.png')
+            return 0, 0, 0, 0
+
         sxs = []
         sys = []
         exs = []
@@ -289,7 +295,7 @@ class ImgFrame():
         x_cnt = max(1, math.ceil(w / dx ))
         y_cnt = max(1, math.ceil(h / dy ))
 
-        print(f"frame {w}x{h}, split x:{x_cnt}, y:{y_cnt}")
+        # print(f"frame {w}x{h}, split x:{x_cnt}, y:{y_cnt}")
 
         if x_cnt == 1 and y_cnt == 1:
             return [self]
@@ -301,7 +307,7 @@ class ImgFrame():
 
         xminmax = [ [ary[0], ary[-1] + 1] for ary in xes]
         yminmax = [ [ary[0], ary[-1] + 1] for ary in yes]
-
+        
         frames = []
         for xmin, xmax in xminmax:
             for ymin, ymax in yminmax:

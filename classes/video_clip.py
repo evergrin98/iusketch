@@ -17,7 +17,7 @@ class VideoClip():
     w,h이 동일한 frame만 보관.
     0번이 처음이고 가장 아래 frame임.
     '''
-    def __init__(self, frames=[], gif_path="", shape=None, max_clip=100):
+    def __init__(self, frames=[], gif_path="", shape=None, max_clip=200):
         ''' 
         VideoClip 생성자.
         frames가 있으면 복사 생성함. 
@@ -173,7 +173,7 @@ class VideoClip():
         return imgfrm
 
 
-    def make_gif(self, gif_file, reverse=False, ratio=1.0):
+    def make_gif(self, gif_file, reverse=False, ratio=1.0, fps=5):
         '''
         frame들을 gif파일로 만든다.
         '''
@@ -193,7 +193,7 @@ class VideoClip():
         if reverse:
             frames.reverse()
 
-        iio.mimsave(gif_file, frames, "GIF", fps=5)
+        iio.mimsave(gif_file, frames, "GIF", fps=fps)
         print(gif_file, " saved")
 
 
@@ -422,6 +422,9 @@ class VideoClip():
 
         return vclip
 
+
+
+
     def minus_from(self, imgfrm, included_label=False, stack=False):
         '''
         imgfrm에서 clip의 각 frame을 뺀 frame들로
@@ -499,14 +502,135 @@ class VideoClip():
         return VideoClip(frames=frames)
 
 
+
+    def find_adjacent_box(self, sorted_boxes, item_idx, margin=2):
+
+        base_box = sorted_boxes[item_idx]
+        bsx, bsy, bex, bey = base_box['rect']
+        bsx = bsx - margin
+        bsy = bsy - margin
+        bex = bex + margin
+        bey = bey + margin
+
+        for idx in range(item_idx+1, len(sorted_boxes)):
+            box = sorted_boxes[idx]
+            sx, sy, ex, ey = box['rect']
+
+            if sx <= bex and ex >= bsx and sy <= bey and ey >= bsy:
+                # box가 겹침
+                return idx
+
+        return item_idx + 1
+
+
+
+    def adjacent_clips(self, included_top=0, seq_type=0):
+        '''
+        각 frame의 외곽 box를 구하여 인접한 frame순으로 정렬한다.
+        box의 관계. - 포함, 겹침, 떨어짐.
+        '''
+        clips = None
+        if 0 == included_top:
+            clips = self.clips
+        elif 1 == included_top:
+            clips = self.clips[1:]
+        elif 2 == included_top:
+            clips = self.clips[1:-1]
+
+        boxes = []
+        centers = []
+        # 각 frame에서 외곽 박스와 센터를 찾는다.
+        for idx, imgframe in enumerate(clips):
+            sx, sy, ex, ey = imgframe.out_box()
+            if ex == 0 and ey == 0:
+                continue
+            boxes.append({'idx':idx, 'rect': (sx, sy, ex, ey)})
+            cx = (sx + ex) // 2
+            cy = (sy + ey) // 2
+            centers.append((cx, cy))
+
+        # 100x100 sliding box로 가장 많은 center가 있는 박스의 중심을 기준점으로 정함.
+        # 얼굴이 가장 복잡하므로 이부분이 얼굴의 중심으로 볼 수 있음.
+        box_w = 100
+        box_h = 100
+        step = 10
+        imgh = self.shape[0]
+        imgw = self.shape[1]
+        max_center_cnt = 0
+        max_center_px = 0
+        max_center_py = 0
+        for posy in range(0, imgh - box_h, step):
+            for posx in range(0, imgw - box_w, step):
+                center_cnt = 0
+                for cx, cy in centers:
+                    if cx >= posx and cx < posx + box_w:
+                        if cy >= posy and cy < posy + box_h:
+                            center_cnt += 1
+
+                if center_cnt > max_center_cnt:
+                    max_center_cnt = center_cnt
+                    max_center_px = posx
+                    max_center_py = posy
+
+        base_x = (max_center_px+box_w) // 2
+        base_y = (max_center_py+box_h) // 2
+
+        distances = []
+        for idx, center in enumerate(centers):
+            cx, cy = center
+            distance = (base_x - cx)**2 + (base_y - cy)**2
+            distances.append( {'idx': idx, 'dist': distance} )
+
+        sorted_dist = sorted(distances, key=lambda x:x['dist'], reverse=False)
+
+
+        frames = []
+
+        if seq_type == 0 :
+            # no.1 near to the center
+            for distidx in sorted_dist:
+                idx = distidx['idx']
+                frames.append(clips[idx])
+        else:
+            # no.2 near to the neighbor
+            sorted_boxes = []
+            for distidx in sorted_dist:
+                idx = distidx['idx']
+                for box in boxes:
+                    boxidx = box['idx']
+                    if idx == boxidx:
+                        sorted_boxes.append(box)
+
+            item_idx = 0
+
+            while True:
+                next_idx = self.find_adjacent_box(sorted_boxes, item_idx)
+
+                if next_idx == len(sorted_boxes) - 2:
+                    break
+
+                next_box = sorted_boxes[next_idx].copy()
+                del sorted_boxes[next_idx]
+                sorted_boxes.insert(item_idx + 1, next_box)
+                item_idx += 1
+
+            for boxidx in sorted_boxes:
+                idx = boxidx['idx']
+                frames.append(clips[idx])
+
+        return VideoClip(frames=frames)
+
+
 if __name__ == "__main__":
     """ 
     main함수.
     """
 
+    import cv2
     import os
     import glob
     from utils.files import dir_path_change
+    from PIL import Image, ImageDraw
     import matplotlib.pyplot as plt
 
     IMG_LOAD_BASE_PATH = '/home/evergrin/iu/datas/imgs/raw_gif'
@@ -515,17 +639,43 @@ if __name__ == "__main__":
 
 
     gif_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
-    gif_file = gif_list[0]
+    gif_file = gif_list[3]
 
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
-    
-    # newclip = vclip.all_clips(count=5, include_top=True)
-    
+
     newclip = vclip.split(dx=50,dy=50, include_top=False)
 
+    newclip = newclip.adjacent_clips(included_top=0, seq_type=1)
+
+    # boxes = newclip.adjacent_clips(included_top=0)
+    # topfrm = newclip.clips[0]
+    # topimg = topfrm.to_image()
+    # draw = ImageDraw.Draw(topimg)  
+
+    # for idxbox in boxes:
+    #     box = idxbox['rect']
+    #     sp = (box[0], box[1])
+    #     ep = (box[2], box[3])
+    #     cx = (box[0] + box[2]) // 2
+    #     cy = (box[1] + box[3]) // 2
+    #     sp = (cx-1, cy-1)
+    #     ep = (cx+1, cy+1)
+    #     draw.rectangle([sp, ep], outline ="black")
+
+    # plt.imshow(topimg, cmap='gray')
+
+    stackedclip = newclip.stacked_frames_clip()
     new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
-    newclip.make_gif(new_file)
+    stackedclip.make_gif(new_file, fps=2)
+
+
+    # newclip = vclip.all_clips(count=5, include_top=True)
+    
+    # newclip = vclip.split(dx=50,dy=50, include_top=False)
+
+    # new_file = dir_path_change(gif_file, IMG_SAVE_BASE_PATH, "gif")
+    # newclip.make_gif(new_file)
 
     # stacked_clip = newclip.stacked_frames_clip(step=1)
     # label_frm = newclip.clips[-1]
