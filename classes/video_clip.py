@@ -234,7 +234,7 @@ class VideoClip():
         if img_cnt < pick_cnt:
             raise Exception("count not match")
 
-        idx_arry = np.arange(idx_low, idx_high + 1)
+        idx_arry = np.arange(idx_low, idx_high)
         idxes = np.array_split(idx_arry, pick_cnt)
 
         frames = []
