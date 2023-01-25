@@ -316,7 +316,8 @@ class ImgFrame():
                 if np.min(emptyary) < 0.9:
                     frames.append(ImgFrame(emptyary, do_norm=False))
                 else:
-                    print('split empty frame skip')
+                    # print('split empty frame skip')
+                    pass
 
         return frames
 

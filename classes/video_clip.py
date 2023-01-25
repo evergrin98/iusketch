@@ -17,7 +17,7 @@ class VideoClip():
     w,h이 동일한 frame만 보관.
     0번이 처음이고 가장 아래 frame임.
     '''
-    def __init__(self, frames=[], gif_path="", shape=None, max_clip=200):
+    def __init__(self, frames=[], gif_path="", shape=None, max_clip=300):
         ''' 
         VideoClip 생성자.
         frames가 있으면 복사 생성함. 
@@ -486,18 +486,28 @@ class VideoClip():
             return VideoClip(frames=clips)
 
 
-    def split(self, dx=100, dy=100, include_top=False):
+    def split(self, dx=100, dy=100, included_top=False):
         '''
         외곽 박스 크기가 dx, dy보다 크면 split하여 
         동일한 크기의 frame 리스트로 생성하여 리턴함.
+        included_top : top frame 포함 여부.
         '''
-        clips = self.clips
-        if not include_top:
-            clips = self.clips[1:]
+        clips = None
+        top_frame = None
+        if included_top:
+            top_frame = self.clips[0]
+            clips = self.clips[1:-1]
+        else:
+            clips = self.clips
+
 
         frames = []
         for img_frm in clips:
             frames.extend(img_frm.splitted_frames(dx, dy))
+
+        if included_top:
+            frames.append(top_frame)
+            frames.insert(0, top_frame)
 
         return VideoClip(frames=frames)
 
@@ -530,11 +540,14 @@ class VideoClip():
         box의 관계. - 포함, 겹침, 떨어짐.
         '''
         clips = None
+        top_frame = None
         if 0 == included_top:
             clips = self.clips
         elif 1 == included_top:
+            top_frame = self.clips[0]
             clips = self.clips[1:]
         elif 2 == included_top:
+            top_frame = self.clips[0]
             clips = self.clips[1:-1]
 
         boxes = []
@@ -606,7 +619,7 @@ class VideoClip():
             while True:
                 next_idx = self.find_adjacent_box(sorted_boxes, item_idx)
 
-                if next_idx == len(sorted_boxes) - 2:
+                if next_idx >= len(sorted_boxes) - 2:
                     break
 
                 next_box = sorted_boxes[next_idx].copy()
@@ -617,6 +630,12 @@ class VideoClip():
             for boxidx in sorted_boxes:
                 idx = boxidx['idx']
                 frames.append(clips[idx])
+                
+        if 1 == included_top:
+            frames.insert(0, top_frame)
+        elif 2 == included_top:
+            frames.insert(0, top_frame)
+            frames.append(top_frame)
 
         return VideoClip(frames=frames)
 
@@ -644,7 +663,7 @@ if __name__ == "__main__":
     vclip = VideoClip()
     vclip.load_gif(gif_file, grayscale=True)
 
-    newclip = vclip.split(dx=50,dy=50, include_top=False)
+    newclip = vclip.split(dx=50,dy=50, included_top=False)
 
     newclip = newclip.adjacent_clips(included_top=0, seq_type=1)
 
