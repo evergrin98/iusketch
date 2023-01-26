@@ -75,7 +75,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             np.random.shuffle(self.imgs)
 
         clips = []
-        for idx in range(self.batch_size):
+        for idx in range(100):
 
             # gif파일을 VideoClip으로 변경.(norm되어 있음.)
             clip = VideoClip(gif_path=self.imgs[idx])
@@ -100,24 +100,27 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             if self.label_type == 'all':
                 use_top_frame = True
             
-            if self.seq_type == 'all':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none', overlap=self.overlap)
-            elif self.seq_type == 'rest':
-                clip = clip.all_clips(count=pick_count, include_top=True, shuffle='random', overlap=self.overlap)
-            elif self.seq_type == 'arandom':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random', overlap=self.overlap)
-            elif self.seq_type == 'aforward':
-                clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward', overlap=self.overlap)
-            elif self.seq_type == 'random':
-                clip = clip.random_clips(count=pick_count, step=leap_step, include_top=use_top_frame)
-            elif self.seq_type == 'reverse':
-                clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=True, include_top=use_top_frame)
-            else: # 'forward'
-                clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=False, include_top=use_top_frame)
+            try:
+                if self.seq_type == 'all':
+                    clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none', overlap=self.overlap)
+                elif self.seq_type == 'rest':
+                    clip = clip.all_clips(count=pick_count, include_top=True, shuffle='random', overlap=self.overlap)
+                elif self.seq_type == 'arandom':
+                    clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='random', overlap=self.overlap)
+                elif self.seq_type == 'aforward':
+                    clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='forward', overlap=self.overlap)
+                elif self.seq_type == 'random':
+                    clip = clip.random_clips(count=pick_count, step=leap_step, include_top=use_top_frame)
+                elif self.seq_type == 'reverse':
+                    clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=True, include_top=use_top_frame)
+                else: # 'forward'
+                    clip = clip.sequential_clips(count=pick_count, step=leap_step, reverse=False, include_top=use_top_frame)
 
-            # 그려진 부분을 누적하여 frame을 생성.
-            if self.stacked :
-                clip = clip.stacked_frames_clip(step=1, included_label=use_top_frame)
+                # 그려진 부분을 누적하여 frame을 생성.
+                if self.stacked :
+                    clip = clip.stacked_frames_clip(step=1, included_label=use_top_frame)
+            except e:
+                continue
 
             # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
             # augment = random.choices(population=self.augmentation_list, k=1)[0]
@@ -126,6 +129,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             # clip은 grayscale이고, augmentation후 이미지가 흐려질 수 있으므로 threshold 0.7정도는 되어야 함.
             # clip.threshold(threshold=0.7, low=0.0, high=1.0, inplace=True)
             clips.append(clip)
+            
+            if self.batch_size == len(clips):
+                break
 
         clips_arry = []
         for clip in clips:
@@ -209,18 +215,45 @@ if __name__ == "__main__":
 
     img_list = glob.glob(os.path.join(IMG_PATH, "*.gif"))
 
-    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='all', label_type='1step', stacked=False, overlap=False)
+    def arry5d_to_img(arry5d, save_as='', threshold=0.0):
+        frmimg_cnt = arry5d.shape[1]
+        fig, axes = plt.subplots(nrows = 1, ncols = frmimg_cnt, figsize=(15, 3))
+
+        for idx, num in enumerate(range(0, frmimg_cnt)):
+            frm = ImgFrame(img=arry5d[0][idx][:, :, :], do_norm=False)
+            min_val = np.min(frm.arry)
+            max_val = np.max(frm.arry)
+            frm.arry = (frm.arry - min_val) / (max_val - min_val)
+
+            min_val = np.min(frm.arry)
+            max_val = np.max(frm.arry)
+            # print("min,max: ", np.min(frm.arry), np.max(frm.arry))
+
+            if threshold > 0.0:
+                frm.threshold(threshold=threshold)
+
+            img = frm.to_image()
+            axes[idx].imshow(img, cmap='gray')
+
+        plt.show()
+    
+    
+    dgen = DataSetGenerator(imgs=img_list, batch_size=4, time_step=5, seq_type='aforward', label_type='1step', stacked=True, overlap=False)
 
     it = iter(dgen)
     x, y = next(it)
 
-    frm = ImgFrame(img=x[0][-1][:, :, :], do_norm=False)
-    img = frm.to_image()
-    plt.imshow(img, cmap='gray')
+    arry5d_to_img(x, threshold=0.)
+    
+    print('end')
+    
+    # frm = ImgFrame(img=x[0][-1][:, :, :], do_norm=False)
+    # img = frm.to_image()
+    # plt.imshow(img, cmap='gray')
 
-    frm = ImgFrame(img=y[0][-1][:, :, :], do_norm=False)
-    img = frm.to_image()
-    plt.imshow(img, cmap='gray')
+    # frm = ImgFrame(img=y[0][-1][:, :, :], do_norm=False)
+    # img = frm.to_image()
+    # plt.imshow(img, cmap='gray')
     # label = x[:, -1, :, :]
     # print(label.shape)
     # label2 = np.expand_dims(label, axis=1)
