@@ -57,7 +57,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                                             # Affine(translate_percent=0.2, p=aug_prob, cval=1.0, mode=cv2.BORDER_CONSTANT),
                                             Affine(translate_percent=None, shear=15, p=aug_prob, cval=1.0, mode=cv2.BORDER_CONSTANT),
                                            ])
-        # self.on_epoch_end()
+        self.on_epoch_end()
 
 
     def __len__(self):
@@ -65,20 +65,26 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         Generator의 length
         계속해서 생성 가능하므로 임의의 값으로 설정.
         '''
-        return 1000
+        return self.data_count // self.batch_size
+
+
+    def on_epoch_end(self):
+        if self.shuffle is True:
+            np.random.shuffle(self.imgs)
 
 
     def __getitem__(self, index):
         ''' 입력데이터와 라벨을 생성. '''
 
-        if self.shuffle is True:
-            np.random.shuffle(self.imgs)
-
         clips = []
-        for idx in range(100):
+        
+        idx = index * self.batch_size
+        while True:
 
             # gif파일을 VideoClip으로 변경.(norm되어 있음.)
-            clip = VideoClip(gif_path=self.imgs[idx])
+            clip = VideoClip(gif_path=self.imgs[idx % self.data_count])
+            
+            idx += 1
 
             # 프레임 개수에 따라 leap_step을 랜덤 선택하고 프레임을 골라서 누적한다.
             frm_cnt = clip.count() - 2
@@ -99,7 +105,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             use_top_frame = False
             if self.label_type == 'all':
                 use_top_frame = True
-            
+
             try:
                 if self.seq_type == 'all':
                     clip = clip.all_clips(count=pick_count, include_top=use_top_frame, shuffle='none', overlap=self.overlap)
