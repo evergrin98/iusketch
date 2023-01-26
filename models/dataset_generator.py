@@ -119,7 +119,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
                 # 그려진 부분을 누적하여 frame을 생성.
                 if self.stacked :
                     clip = clip.stacked_frames_clip(step=1, included_label=use_top_frame)
-            except e:
+            except:
                 continue
 
             # 랜덤한 augment를 clip의 모든 frame에 동일하게 적용.
