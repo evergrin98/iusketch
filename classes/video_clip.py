@@ -17,7 +17,7 @@ class VideoClip():
     w,h이 동일한 frame만 보관.
     0번이 처음이고 가장 아래 frame임.
     '''
-    def __init__(self, frames=[], gif_path="", shape=None, max_clip=300):
+    def __init__(self, frames=[], gif_path="", shape=None, max_clip=4000):
         ''' 
         VideoClip 생성자.
         frames가 있으면 복사 생성함. 
@@ -236,7 +236,7 @@ class VideoClip():
 
         idx_arry = np.arange(idx_low, idx_high)
         idxes = np.array_split(idx_arry, pick_cnt)
-
+        
         frames = []
         for arry in idxes:
 
@@ -513,28 +513,107 @@ class VideoClip():
 
 
 
-    def find_adjacent_box(self, sorted_boxes, item_idx, margin=2):
+    def find_adjacent_box(self, sorted_boxes, item_idx, margin=2, prior_direction=-1, max_direction=45):
 
+        # sorted_boxes에서 item_idx부터 이후로 검색하면서 박스가 겹치는 clip index리스트를 구한다.
+        # 포함이면 360, 나머지는 각도를 0-315도로 45도 간격으로 표시.
         base_box = sorted_boxes[item_idx]
         bsx, bsy, bex, bey = base_box['rect']
-        bsx = bsx - margin
-        bsy = bsy - margin
+        bsx = max(0, bsx - margin)
+        bsy = max(0, bsy - margin)
         bex = bex + margin
         bey = bey + margin
 
+        adjacent_idxes = []
         for idx in range(item_idx+1, len(sorted_boxes)):
             box = sorted_boxes[idx]
             sx, sy, ex, ey = box['rect']
 
             if sx <= bex and ex >= bsx and sy <= bey and ey >= bsy:
-                # box가 겹침
-                return idx
+                # box가 겹치는 경우중에...
+                
+                right, left, up, down = False, False, False, False
+                direction = -1
+                distance = 0
+                if (sx >= bsx and ex <= bex and sy >= bsy and ey <= bey) or \
+                    (sx <= bsx and ex >= bex and sy <= bsy and ey >= bey):
+                    # base에 포함됨 또는 base를 포함함.
+                    direction = 0
+                    distance = 0
+                else:
+                    # 겹치는 방향을 45도 단위로 나타냄.
+                    if ex > bex:
+                        right = True
+                    if sx < bsx:
+                        left = True
+                    if sy < bsy:
+                        up = True
+                    if ey < bey:
+                        down = True
 
-        return item_idx + 1
+                    if left and right and up:
+                        direction = 0
+                    elif left and right and down:
+                        direction = 180
+                    elif up and down and right:
+                        direction = 90
+                    elif up and down and left:
+                        direction = 270
+                    elif left and up:
+                        direction = 45
+                    elif left and down:
+                        direction = 135
+                    elif right and down:
+                        direction = 225
+                    elif right and up:
+                        direction = 315
+                    
+                    #이전 방향이 있는 경우만 방향을 고려함.
+                    if prior_direction < 0:
+                        distance = 0
+                        # 하나를 설정하면 그방향을 이전 방향으로 설정하여 모두다 추가되는걸 막는다.
+                        prior_direction = direction
+                    else:
+                        distance = min((360 + direction - prior_direction) % 360, (360 + prior_direction - direction) % 360)
+
+                info = {'idx': idx, 'dir': direction, 'dist': distance}
+
+                if distance <= max_direction:
+                    adjacent_idxes.append(info)
+
+                # if margin == 0:
+                #     # box근처라면 비슷한 방향만 추가.
+                #     # if distance <= 90:
+                #     adjacent_idxes.append(info)
+                # else:
+                #     if distance <= max_direction:
+                #         adjacent_idxes.append(info)
+                #         break
+                    
+                # elif margin < 3:
+                #     # box근처라면 비슷한 방향만 추가.
+                #     if distance < 90:
+                #         adjacent_idxes.append(info)
+                # elif margin < 6:
+                #     if distance < 45:
+                #         adjacent_idxes.append(info)
+                #         break
+                # elif margin < 9:
+                #     if distance < 45:
+                #         adjacent_idxes.append(info)
+                #         break
+                # else:
+                #     # box에서 멀리까지 획이 없다면 한개만 추가.
+                #     # 안그러면 그리는 먼곳에서 이상한 점이 나타난다.
+                #     adjacent_idxes.append(info)
+                #     break
+
+        adjacent_idxes = sorted(adjacent_idxes, key=lambda x:x['dist'], reverse=False)
+
+        return adjacent_idxes
 
 
-
-    def adjacent_clips(self, included_top=0, seq_type=0):
+    def adjacent_clips(self, included_top=0, seq_type=0, margin=2):
         '''
         각 frame의 외곽 box를 구하여 인접한 frame순으로 정렬한다.
         box의 관계. - 포함, 겹침, 떨어짐.
@@ -599,14 +678,37 @@ class VideoClip():
 
         frames = []
 
-        if seq_type == 0 :
-            # no.1 near to the center
+        if seq_type == 0:
+            # 중심에서 가까운 순서대로 정렬함.
             for distidx in sorted_dist:
                 idx = distidx['idx']
                 frames.append(clips[idx])
-        else:
-            # no.2 near to the neighbor
+        elif seq_type == 1:
+            # 센터에서 가까운 획부터 시작해서 인접 박스로 진행
             sorted_boxes = []
+            
+            # 처음 획 box를 찾는다.
+            first_idx = sorted_dist[0]['idx']
+            first_box = None
+            for box in boxes:
+                boxidx = box['idx']
+                if first_idx == boxidx:
+                    first_box = box
+                    break
+
+            # 처음 획의 box 중심점을 기준으로 거리를 다시 계산한다.
+            sx, sy, ex, ey = first_box['rect']
+            base_x = (sx + ex) // 2
+            base_y = (sy + ey) // 2
+            distances = []
+            for idx, center in enumerate(centers):
+                cx, cy = center
+                distance = (base_x - cx)**2 + (base_y - cy)**2
+                distances.append( {'idx': idx, 'dist': distance} )
+
+            sorted_dist = sorted(distances, key=lambda x:x['dist'], reverse=False)
+            
+            # 박스를 첫버째 박스와 가까운 순서로 정리.
             for distidx in sorted_dist:
                 idx = distidx['idx']
                 for box in boxes:
@@ -615,17 +717,62 @@ class VideoClip():
                         sorted_boxes.append(box)
 
             item_idx = 0
+            last_dir = 0
 
             while True:
-                next_idx = self.find_adjacent_box(sorted_boxes, item_idx)
 
-                if next_idx >= len(sorted_boxes) - 2:
+                next_idx_list = []
+                # margin을 늘려가며 겹치는 box를 찾는다.
+                for margin_val in range(1, margin):
+                    next_idx_list = self.find_adjacent_box(sorted_boxes, item_idx, 
+                                            margin=margin_val, prior_direction=last_dir, max_direction=45)
+                    if len(next_idx_list) > 0:
+                        break
+
+                if len(next_idx_list) == 0:
+                    for margin_val in range(1, margin):
+                        next_idx_list = self.find_adjacent_box(sorted_boxes, item_idx, 
+                                                margin=margin_val, prior_direction=last_dir, max_direction=90)
+                        if len(next_idx_list) > 0:
+                            break
+
+                if len(next_idx_list) == 0:
+                    for margin_val in range(1, margin):
+                        next_idx_list = self.find_adjacent_box(sorted_boxes, item_idx, 
+                                            margin=margin_val, prior_direction=last_dir, max_direction=135)
+                        if len(next_idx_list) > 0:
+                            break
+
+                if len(next_idx_list) == 0:
+                    for margin_val in range(1, margin):
+                        next_idx_list = self.find_adjacent_box(sorted_boxes, item_idx, 
+                                            margin=margin_val, prior_direction=-1)
+                        if len(next_idx_list) > 0:
+                            break
+
+                
+                if len(next_idx_list) == 0:
+                    # 못찾았다면 다음 걸로 넘어감.
+                    last_dir = -1
+                    item_idx += 1
+                else:
+                    # del로 index가 꼬이지 않도록 작은 index부터 실행함.
+                    next_idx_list = sorted(next_idx_list, key=lambda x:x['idx'], reverse=False)
+
+                    # 다음 방향은 가장 가까운 방향으로 .
+                    last_dir = next_idx_list[0]['dir']
+                    
+                    # del때문에 가까운 곳부터 그려야 index가 꼬이지 않는다.
+                    for next_idx_data in next_idx_list:
+                        next_idx = next_idx_data['idx']
+                        next_box = sorted_boxes[next_idx].copy()
+                        del sorted_boxes[next_idx]
+                        sorted_boxes.insert(item_idx + 1, next_box)
+
+                    item_idx += len(next_idx_list)
+
+                if item_idx >= len(sorted_boxes) - 1:
                     break
-
-                next_box = sorted_boxes[next_idx].copy()
-                del sorted_boxes[next_idx]
-                sorted_boxes.insert(item_idx + 1, next_box)
-                item_idx += 1
 
             for boxidx in sorted_boxes:
                 idx = boxidx['idx']

@@ -292,8 +292,8 @@ class ImgFrame():
         sx, sy, ex, ey = self.out_box()
         w = ex-sx
         h = ey-sy
-        x_cnt = max(1, math.ceil(w / dx ))
-        y_cnt = max(1, math.ceil(h / dy ))
+        x_cnt = max(1, w // dx )
+        y_cnt = max(1, h // dy )
 
         # print(f"frame {w}x{h}, split x:{x_cnt}, y:{y_cnt}")
 
