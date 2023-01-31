@@ -257,7 +257,7 @@ class ImgFrame():
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         if len(contours) == 0:
-            print("no out line!!!!")
+            # print("no out line!!!!")
             # self.to_image(save_file='/home/evergrin/iu/datas/imgs/data_set/error.png')
             return 0, 0, 0, 0
 
@@ -282,6 +282,13 @@ class ImgFrame():
         # print(sx,sy,ex,ey)
 
         return sx, sy, ex, ey
+
+    def fill_box(self, val=0.0):
+        ''' 
+        out box를 val로 채운다.
+        '''
+        sx, sy, ex, ey = self.out_box()
+        self.arry[sy:ey+1, sx:ex+1, :] = val
 
 
     def splitted_frames(self, dx=100, dy=100):
@@ -334,9 +341,12 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     
 
-    file_path = '/home/evergrin/iu/datas/imgs/yahoo/img0060.png'
+    file_path = '/home/evergrin/iu/datas/data_set2/aaa.png'
 
     imgfrm = ImgFrame(img=file_path, grayscale=True)
+    imgfrm.fill_box()
+    
+    plt.imshow(imgfrm.to_image(), cmap='gray')
     # sx, sy, ex, ey = imgfrm.out_box()
 
     # img = imgfrm.to_image()

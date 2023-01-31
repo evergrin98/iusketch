@@ -423,6 +423,18 @@ class VideoClip():
         return vclip
 
 
+    def filled_frames_clip(self, val=0.0):
+        '''
+        clips에서 그려진 부분을 val값으로 채워서 frame생성.
+        지금은 grayscale된 1채널만 동작함.
+        '''
+        if self.isEmpty():
+            raise Exception("empty!!")
+
+        for frame in self.clips:
+            frame.fill_box(val=val)
+
+        return self
 
 
     def minus_from(self, imgfrm, included_label=False, stack=False):
