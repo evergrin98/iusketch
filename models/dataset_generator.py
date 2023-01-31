@@ -17,7 +17,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False, aug_prob=0.4):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False, fill_box=False, aug_prob=0.4):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -35,6 +35,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.label_type = label_type
         self.stacked = stacked
         self.overlap = overlap
+        self.fill_box = fill_box
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -105,6 +106,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             use_top_frame = False
             if self.label_type == 'all':
                 use_top_frame = True
+
+            if self.fill_box :
+                clip.filled_frames_clip()
 
             try:
                 if self.seq_type == 'all':
