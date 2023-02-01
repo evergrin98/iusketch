@@ -17,7 +17,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, seq_type='forward', label_type='1step', stacked=True, overlap=False, fill_box=False, aug_prob=0.4):
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, 
+                 seq_type='forward', label_type='1step', aug_prob=0.4, 
+                 stacked=True, overlap=False, fill_box=False, invert=False):
         '''
         dataset: 5d(bthwc) dataset
         batch_size: batch_size입니다.
@@ -36,6 +38,7 @@ class DataSetGenerator(tf.keras.utils.Sequence):
         self.stacked = stacked
         self.overlap = overlap
         self.fill_box = fill_box
+        self.invert = invert
         self.data_count = len(self.imgs)
 
         self.augmentation_list = [None, ]
@@ -148,6 +151,9 @@ class DataSetGenerator(tf.keras.utils.Sequence):
             clips_arry.append(clip.to_array())
 
         clips_arry = np.stack(clips_arry)
+        
+        if self.invert:
+            clips_arry = 1 - clips_arry
 
         if self.label_type == 'all':
             # x, y는 x의 마지막프레임인 전체 이미지를 라벨로 사용.
