@@ -27,3 +27,25 @@ $ LD_LIBRARY_PATH=/usr/local/cuda-11.0.3/lib64:/usr/local/cuda-11.0.3/extras/CUP
 $ LD_LIBRARY_PATH=/usr/local/cuda-11.0.3/lib64:/usr/local/cuda-11.0.3/extras/CUPTI/lib64:/usr/local/cudnn-11.0-8.0.5.39/lib64:$LD_LIBRARY_PATH
 
 
+
+##### gcp 방화벽 설정.
+사용하고자 하는 port에 tag규칙에 https-server, http-server 추가.
+
+
+##### ssh 연결 끊기지 않게 수정.
+
+- ssh-key expired 되는 문제점
+아래와 같이 ssh-key 생성후, meta-data에 추가.
+
+https://cloud.google.com/compute/docs/connect/create-ssh-keys?hl=ko#create_an_ssh_key_pair
+
+https://cloud.google.com/compute/docs/connect/add-ssh-keys?hl=ko
+
+https://cloud.google.com/compute/docs/connect/add-ssh-keys?hl=ko#after-vm-creation
+
+
+- sshd 연결 옵션.
+sudo vi /etc/ssh/sshd_config
+   and set TCPKeepAlive yes
+sudo service ssh restart
+
