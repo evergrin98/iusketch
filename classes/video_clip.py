@@ -319,7 +319,7 @@ class VideoClip():
 
             img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
 
-            if i % step == 0:
+            if (i + 1) % step == 0:
                 frames.append(img_frame)
                 stacked_frame = None
 
@@ -376,7 +376,7 @@ class VideoClip():
 
             img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
 
-            if idx % step == 0:
+            if (idx + 1) % step == 0:
                 frames.append(img_frame)
                 stacked_frame = None
 
@@ -414,7 +414,7 @@ class VideoClip():
 
             img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
 
-            if idx % step == 0:
+            if (idx+1) % step == 0:
                 vclip.append(img_frame)
 
         if included_label:

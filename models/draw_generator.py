@@ -159,7 +159,7 @@ class DrawGenerator(tf.keras.utils.Sequence):
 
                 img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
 
-                if idx > 0 and idx % self.stack_step == 0:
+                if (idx + 1) % self.stack_step == 0:
                     stacked_xy_frames.append(img_frame)
                     stacked_frame = None
 
