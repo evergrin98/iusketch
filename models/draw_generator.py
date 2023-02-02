@@ -128,7 +128,7 @@ class DrawGenerator(tf.keras.utils.Sequence):
             patch_count = random.randint(5, 30)
             for _ in range(patch_count):
                 start_pos = random.randint(0, len(rest_idx_list))
-                pick_count = random.randint(start_pos, min(len(rest_idx_list), 10))
+                pick_count = random.randint(0, len(rest_idx_list))
                 end_pos = min(len(rest_idx_list), start_pos + pick_count)
                 patch_frames = rest_idx_list[start_pos:end_pos]
                 img_idx_list.extend(patch_frames)
@@ -150,10 +150,11 @@ class DrawGenerator(tf.keras.utils.Sequence):
             y_frames = copy.deepcopy(xy_frames[1:])
 
             for xframe in x_frames:
-                stacked_img = ImgFrame(img_frm)
-                stacked_img.append_channel(xframe)
-                stacked_arry = stacked_img.merged()
-                xframe.append_channel(stacked_arry, do_norm=False)
+                # stacked_img = ImgFrame(img_frm)
+                # stacked_img.append_channel(xframe)
+                # stacked_arry = stacked_img.merged()
+                # xframe.append_channel(stacked_arry, do_norm=False)
+                xframe.append_channel(img_frm, do_norm=False)
 
             datas.append([x_frames, y_frames])
             if self.batch_size == len(datas):
