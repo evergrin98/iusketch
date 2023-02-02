@@ -176,7 +176,7 @@ class ImgFrame():
         return arry
 
 
-    def append_channel(self, img):
+    def append_channel(self, img, do_norm=True):
         '''
         w,h가 동일한 frame을 channel방향으로 쌓는다.
         '''
@@ -186,7 +186,7 @@ class ImgFrame():
             arry = img.arry
         else:
             # ndarray 입력시.
-            arry = self.valid_arry(img)
+            arry = self.valid_arry(img, do_norm=do_norm)
 
         if self.arry.shape[0:2] != arry.shape[0:2]:
             raise Exception("width x height not correct")

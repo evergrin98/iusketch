@@ -701,7 +701,7 @@ class VideoClip():
             
             # 처음 획 box를 찾는다.
             first_idx = sorted_dist[0]['idx']
-            first_box = None
+            first_box = boxes[0]
             for box in boxes:
                 boxidx = box['idx']
                 if first_idx == boxidx:
