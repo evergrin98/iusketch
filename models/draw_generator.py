@@ -20,7 +20,7 @@ class DrawGenerator(tf.keras.utils.Sequence):
         on_epoch_end
     5d의 batch dataset을 만들어 주는 base 클래스.
     '''
-    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, 
+    def __init__(self, imgs=[], imgw=64, imgh=64, time_step=20, batch_size=16, stack_step=2,
                  seq_type='forward', label_type='1step', aug_prob=0.4, 
                  stacked=True, overlap=False, fill_box=False, invert=False):
         '''
@@ -34,6 +34,7 @@ class DrawGenerator(tf.keras.utils.Sequence):
         self.img_w = imgw
         self.img_h = imgh
         self.time_step = time_step
+        self.stack_step = stack_step
         self.batch_size = batch_size
         self.shuffle = True
         self.seq_type = seq_type
@@ -47,10 +48,10 @@ class DrawGenerator(tf.keras.utils.Sequence):
         self.augmentation_list = [None, ]
         self.augmentation_list.append(ReplayCompose([HorizontalFlip(p=1.0)])) # 좌우대칭
         self.augmentation_list.append(ReplayCompose([CropAndPad(
-                                        percent=(-0.2, 0.2), p=1.0, pad_mode=cv2.BORDER_CONSTANT, 
+                                        percent=(0, 0.2), p=1.0, pad_mode=cv2.BORDER_CONSTANT, 
                                         pad_cval=1.0, keep_size=True)])) # crop and pad(size same)
         self.augmentation_list.append(ReplayCompose([SafeRotate(
-                                        limit=[-45, 45], interpolation=1, border_mode=cv2.BORDER_CONSTANT, 
+                                        limit=[-15, 15], interpolation=1, border_mode=cv2.BORDER_CONSTANT, 
                                         value=1.0, mask_value=None, always_apply=False, p=1.0)])) # saferotate(size same)
 
         self.augmentation = ReplayCompose([
@@ -111,8 +112,9 @@ class DrawGenerator(tf.keras.utils.Sequence):
             # 그림 그려진 마지막 포인트를 랜덤하게 설정함
             last_pos_idx = random.randrange(0, frm_cnt)
             last_frm = clip.clips[last_pos_idx]
-
-            xy_idx_list = idx_list[last_pos_idx:last_pos_idx + self.time_step+1]
+            
+            img_pick_count = (self.time_step+1) * self.stack_step
+            xy_idx_list = idx_list[last_pos_idx:last_pos_idx + img_pick_count]
 
             img_idx_list = [last_pos_idx]
 
@@ -128,8 +130,8 @@ class DrawGenerator(tf.keras.utils.Sequence):
             patch_count = random.randint(5, 30)
             for _ in range(patch_count):
                 start_pos = random.randint(0, len(rest_idx_list))
-                pick_count = random.randint(0, len(rest_idx_list))
-                end_pos = min(len(rest_idx_list), start_pos + pick_count)
+                get_count = random.randint(0, len(rest_idx_list))
+                end_pos = min(len(rest_idx_list), start_pos + get_count)
                 patch_frames = rest_idx_list[start_pos:end_pos]
                 img_idx_list.extend(patch_frames)
 
@@ -146,8 +148,23 @@ class DrawGenerator(tf.keras.utils.Sequence):
 
             xy_frames = [ clip.clips[idx] for idx in xy_idx_list ]
 
-            x_frames = copy.deepcopy(xy_frames[0:-1])
-            y_frames = copy.deepcopy(xy_frames[1:])
+            stacked_xy_frames = []
+            stacked_frame = None
+            for idx, frame in enumerate(xy_frames):
+        
+                if stacked_frame is None:
+                    stacked_frame = frame
+                else:
+                    stacked_frame.append_channel(frame)
+
+                img_frame = ImgFrame(stacked_frame.merged(), do_norm=False)
+
+                if idx > 0 and idx % self.stack_step == 0:
+                    stacked_xy_frames.append(img_frame)
+                    stacked_frame = None
+
+            x_frames = copy.deepcopy(stacked_xy_frames[0:-1])
+            y_frames = copy.deepcopy(stacked_xy_frames[1:])
 
             for xframe in x_frames:
                 # stacked_img = ImgFrame(img_frm)

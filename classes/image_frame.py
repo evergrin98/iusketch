@@ -110,7 +110,10 @@ class ImgFrame():
         arry = self.denorm(arry)
         arry = arry.astype(ImgFrame.img_dtype)
 
-        if channel == -1:
+        if channel < channel_count and channel >= 0:
+                # grayscale은 2dim
+                return Image.fromarray(np.squeeze(arry[:, :, channel:channel+1], axis=2), 'L')
+        else:
             if 3 == channel_count:
                 return Image.fromarray(arry, 'RGB')
             elif 4 == channel_count:
@@ -120,9 +123,6 @@ class ImgFrame():
                 return Image.fromarray(np.squeeze(arry, axis=2), 'L')
             else:
                 raise Exception("invalid image shape:", arry.shape)
-        elif channel < channel_count and channel >= 0:
-                # grayscale은 2dim
-                return Image.fromarray(np.squeeze(arry[:, :, channel:channel+1], axis=2), 'L')
             
 
     def to_image(self, save_file="", channel=-1):
